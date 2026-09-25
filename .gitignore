@@ -4,3 +4,4 @@ dist/
 *.local
 .venv/
 data/*.db
+__pycache__/

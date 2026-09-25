@@ -1,7 +1,7 @@
 # ClearSip project handoff
 
 **Last updated:** 2026-09-24  
-**Repository:** `Shubham080802/ClearSip` (private; `main` is pushed)  
+**Repository:** `Shubham080802/ClearSip` (private; `main` is pushed)
 **Local path:** `/Users/shubhamkumar/Documents/GITHUB Projects/ClearSip`
 
 ## Current state
