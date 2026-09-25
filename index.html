@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0c1719" />
+    <meta name="description" content="Clear, sourced beverage-label context." />
+    <title>ClearSip — know what you drink</title>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <a class="brand" href="#top" aria-label="ClearSip home"><span>◒</span> ClearSip</a>
+        <p class="eyebrow">BEVERAGE LABEL CLARITY</p>
+        <h1>Know more than<br /><em>“zero sugar.”</em></h1>
+        <p class="lede">Scan a label, say a drink name, or search it. ClearSip turns an ingredient list into sourced, plain-language context.</p>
+      </header>
+
+      <section class="entry-card" aria-labelledby="lookup-heading">
+        <div class="entry-header">
+          <div>
+            <p class="eyebrow">START HERE</p>
+            <h2 id="lookup-heading">What are you drinking?</h2>
+          </div>
+          <span class="status-dot">US beta dataset</span>
+        </div>
+        <form id="search-form" class="search-form">
+          <label class="sr-only" for="drink-query">Drink name</label>
+          <input id="drink-query" name="drink-query" autocomplete="off" placeholder="e.g. Coke Zero Sugar or Monster Zero Sugar" />
+          <button type="submit">Check drink <span aria-hidden="true">→</span></button>
+        </form>
+        <div class="modes" aria-label="Other ways to identify a beverage">
+          <label class="mode-control"><input id="image-input" type="file" accept="image/*" /><span class="mode-icon">⌁</span> Scan image</label>
+          <label class="mode-control"><input id="video-input" type="file" accept="video/*" /><span class="mode-icon">▷</span> Scan video</label>
+          <button id="voice-button" class="mode-control" type="button"><span class="mode-icon">◉</span> Say its name</button>
+        </div>
+        <p id="scan-status" class="scan-status" aria-live="polite"></p>
+      </section>
+
+      <section id="empty-state" class="empty-state">
+        <div class="empty-symbol">✦</div>
+        <div><h2>Clarity, without fearmongering.</h2><p>Ingredients are not simply “good” or “bad.” Their effects can depend on dose, health history, medications, and the rest of your diet. ClearSip shows what’s known, what to watch, and where the information comes from.</p></div>
+      </section>
+
+      <section id="result" class="result hidden" aria-live="polite"></section>
+
+      <section class="principles" aria-label="ClearSip principles">
+        <article><span>01</span><h2>Evidence first</h2><p>Every assessment links to its source. We separate established guidance from emerging or uncertain evidence.</p></article>
+        <article><span>02</span><h2>Context matters</h2><p>Serving size, total daily intake, and individual health needs change the answer.</p></article>
+        <article><span>03</span><h2>Labels evolve</h2><p>We retain a source date and formulation region. Always compare this result with the package in your hand.</p></article>
+      </section>
+    </main>
+    <footer>ClearSip is educational, not medical advice. Speak with a qualified clinician about personal dietary needs.</footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
