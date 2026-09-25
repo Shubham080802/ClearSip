@@ -11,6 +11,19 @@ ClearSip is an early, educational beverage-label awareness app. A user can type 
 - Ingredient roles, amount/context caveats, FDA sources, source dates, and formulation-region notes
 - A research note documenting approved sources and health-language guardrails
 
+## Architecture
+
+```text
+Chrome browser UI  →  FastAPI `/api`  →  PostgreSQL (production)
+       │                    │
+       └── OCR / voice      └── SQLite (local-only development)
+```
+
+- The frontend is a small Vite application. It stays browser-first for scanning and voice capture.
+- [`api/index.py`](api/index.py) exports the FastAPI app that Vercel can deploy as a Python Function.
+- [`data/schema.sql`](data/schema.sql) is the relational source of truth for products, ingredients, and their product-specific assessments.
+- SQLite is deliberately local-only. Vercel functions have no durable local disk, so production must receive a PostgreSQL `DATABASE_URL` from a managed provider.
+
 ## Run locally
 
 ```bash
@@ -19,6 +32,23 @@ npm run dev
 ```
 
 Then open the local Vite address shown in the terminal. For a production check, run `npm run build`.
+
+For the API and local SQL seed:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python scripts/bootstrap_db.py
+.venv/bin/uvicorn api.index:app --reload
+```
+
+The API is then available at `http://127.0.0.1:8000/api/health` and its interactive docs at `http://127.0.0.1:8000/docs`.
+
+## Chrome-first and Vercel workflow
+
+Chrome can be your primary working surface: use GitHub's web editor (`github.dev`) for simple source changes, the Vercel dashboard for deployments and environment variables, and Vercel preview URLs to test each pushed commit. The Git repository remains the authoritative source, so browser-made edits should still be committed to GitHub.
+
+When you are ready to deploy, import the GitHub repository into Vercel from Chrome. Vercel can deploy FastAPI as a Python Function. Add a Marketplace PostgreSQL integration (for example, Neon) and set its injected `DATABASE_URL`; do not deploy with the local SQLite database. No Vercel project or database has been created by this repository.
 
 ## Data safety and provenance
 
@@ -32,7 +62,7 @@ The seed dataset is intentionally small. See [the research note](docs/research/s
 
 ## Recommended next steps
 
-1. Move the seed data into a database with `products`, `product_labels`, `ingredients`, `ingredient_assessments`, and `sources` tables.
+1. Connect the browser UI to the FastAPI read endpoints, replacing its temporary client-side seed lookup.
 2. Add barcode lookup (for exact package-size matching) and a reviewed “unmatched label” queue.
 3. Add auth, consent, retention controls, and a moderation/review workflow before retaining any uploads.
 4. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before public release.

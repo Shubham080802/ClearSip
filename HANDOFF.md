@@ -1,16 +1,18 @@
 # ClearSip project handoff
 
 **Last updated:** 2026-09-24  
-**Repository:** `Shubham080802/ClearSip` (create/push after the initial local commit)  
+**Repository:** `Shubham080802/ClearSip` (private; `main` is pushed)  
 **Local path:** `/Users/shubhamkumar/Documents/GITHUB Projects/ClearSip`
 
 ## Current state
 
-The initial static Vite MVP is complete and builds with `npm run build`. It supports text, image OCR, selected-video-frame OCR, and browser speech recognition. The only seed products are US Coca-Cola Zero Sugar and Monster Energy Zero Sugar.
+The initial Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, and browser speech recognition. A FastAPI/SQL foundation is now also in place and has been validated against locally seeded SQLite. The only seed products are US Coca-Cola Zero Sugar and Monster Energy Zero Sugar.
 
 ## Important implementation choices
 
 - `src/data.js` is a deliberately small, versioned seed dataset.
+- `api/index.py` exports the Vercel-compatible FastAPI app; `data/schema.sql` models products, ingredients, and product-specific assessments.
+- `scripts/bootstrap_db.py` seeds local SQLite. Production must use a PostgreSQL `DATABASE_URL` from a Vercel Marketplace database integration; never depend on SQLite persistence in a Vercel Function.
 - OCR is processed in the browser with Tesseract.js; uploads are not persisted by this app.
 - Voice recognition relies on `SpeechRecognition`/`webkitSpeechRecognition`, which is browser-dependent.
 - Video scanning extracts one central/early frame. It is a useful MVP, not a guarantee that every frame is read.
@@ -26,7 +28,7 @@ The initial static Vite MVP is complete and builds with `npm run build`. It supp
 
 ## Next recommended task
 
-Implement a database-backed reviewed ingestion workflow. Begin with a schema and admin-only approval status; do not collect or retain consumer uploads without explicit consent and documented retention/deletion controls.
+Connect the browser lookup to `GET /api/products` and `GET /api/products/{id}`, then add a database-backed reviewed ingestion workflow. Begin with an admin-only approval status; do not collect or retain consumer uploads without explicit consent and documented retention/deletion controls.
 
 ## Usage-limit continuation instruction
 
