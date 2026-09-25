@@ -8,33 +8,33 @@ from api.database import connection, placeholder
 
 app = FastAPI(
     title="ClearSip API",
-    version="0.1.0",
+    version="0.2.0",
     description="Versioned, sourced beverage-label information. Educational only; not medical advice.",
 )
 
 
-def rows_to_product(rows: list[dict]) -> dict:
+def rows_to_package(rows: list[dict]) -> dict:
     first = rows[0]
     return {
-        "id": first["product_id"],
-        "name": first["name"],
-        "brand": first["brand"],
-        "region": first["region"],
+        "id": first["package_id"],
+        "name": first["display_name"],
+        "manufacturer": first["manufacturer_name"],
+        "family": first["family_name"],
+        "flavor": first["flavor_name"],
+        "category": first["category"],
+        "market": first["market"],
+        "package": first["package_description"],
+        "gtin": first["gtin"],
+        "fdc_id": first["fdc_id"],
         "serving": first["serving"],
         "calories": first["calories"],
         "added_sugar_g": first["added_sugar_g"],
         "caffeine_mg": first["caffeine_mg"],
         "verification_status": first["verification_status"],
-        "last_reviewed": first["last_reviewed"],
-        "source_url": first["source_url"],
+        "label_observed_on": first["label_observed_on"],
+        "source": {"publisher": first["publisher"], "url": first["source_url"], "accessed_on": first["accessed_on"]},
         "ingredients": [
-            {
-                "name": row["ingredient_name"],
-                "role": row["role"],
-                "assessment": row["assessment"],
-                "evidence_status": row["evidence_status"],
-                "source_url": row["ingredient_source_url"],
-            }
+            {"name": row["ingredient_name"], "role": row["role"], "assessment": row["assessment"], "evidence_status": row["evidence_status"], "source_url": row["ingredient_source_url"]}
             for row in rows if row["ingredient_name"]
         ],
     }
@@ -42,42 +42,55 @@ def rows_to_product(rows: list[dict]) -> dict:
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "clearsip-api"}
+    return {"status": "ok", "service": "clearsip-api", "catalog_model": "versioned-package-label"}
 
 
 @app.get("/api/products")
 def search_products(query: str = Query(min_length=2, max_length=120)) -> list[dict]:
     marker = placeholder()
     statement = f"""
-        SELECT p.id, p.name, p.brand, p.region, p.serving, p.calories,
-               p.added_sugar_g, p.caffeine_mg, p.verification_status, p.last_reviewed,
-               p.source_url
-        FROM products p
-        WHERE LOWER(p.name) LIKE LOWER({marker}) OR LOWER(p.brand) LIKE LOWER({marker})
-        ORDER BY p.name
-        LIMIT 10
+        SELECT pp.id, bv.display_name, m.name AS manufacturer, bf.name AS family,
+               pp.market, pp.package_description, pp.gtin, pp.fdc_id, lv.caffeine_mg, lv.verification_status
+        FROM product_packages pp
+        JOIN beverage_variants bv ON bv.id = pp.variant_id
+        JOIN beverage_families bf ON bf.id = bv.family_id
+        JOIN manufacturers m ON m.id = bf.manufacturer_id
+        JOIN label_versions lv ON lv.package_id = pp.id AND lv.is_current = 1
+        WHERE LOWER(bv.display_name) LIKE LOWER({marker})
+           OR LOWER(m.name) LIKE LOWER({marker})
+           OR LOWER(bf.name) LIKE LOWER({marker})
+        ORDER BY bv.display_name, pp.package_description
+        LIMIT 25
     """
     with connection() as conn:
-        records = conn.execute(statement, (f"%{query}%", f"%{query}%")).fetchall()
+        records = conn.execute(statement, (f"%{query}%", f"%{query}%", f"%{query}%")).fetchall()
     return [dict(record) for record in records]
 
 
-@app.get("/api/products/{product_id}")
-def product_detail(product_id: str) -> dict:
+@app.get("/api/products/{package_id}")
+def product_detail(package_id: str) -> dict:
     marker = placeholder()
     statement = f"""
-        SELECT p.id AS product_id, p.name, p.brand, p.region, p.serving, p.calories,
-               p.added_sugar_g, p.caffeine_mg, p.verification_status, p.last_reviewed,
-               p.source_url, i.name AS ingredient_name, pi.role, pi.assessment,
-               pi.evidence_status, pi.source_url AS ingredient_source_url
-        FROM products p
-        LEFT JOIN product_ingredients pi ON pi.product_id = p.id
-        LEFT JOIN ingredients i ON i.id = pi.ingredient_id
-        WHERE p.id = {marker}
-        ORDER BY pi.position
+        SELECT pp.id AS package_id, pp.market, pp.package_description, pp.gtin, pp.fdc_id,
+               bv.display_name, bv.flavor_name, bv.category, bf.name AS family_name,
+               m.name AS manufacturer_name, lv.serving, lv.calories, lv.added_sugar_g,
+               lv.caffeine_mg, lv.verification_status, lv.label_observed_on,
+               s.publisher, s.url AS source_url, s.accessed_on,
+               i.name AS ingredient_name, li.role, li.assessment, li.evidence_status,
+               li.source_url AS ingredient_source_url
+        FROM product_packages pp
+        JOIN beverage_variants bv ON bv.id = pp.variant_id
+        JOIN beverage_families bf ON bf.id = bv.family_id
+        JOIN manufacturers m ON m.id = bf.manufacturer_id
+        JOIN label_versions lv ON lv.package_id = pp.id AND lv.is_current = 1
+        JOIN source_records s ON s.id = lv.source_id
+        LEFT JOIN label_ingredients li ON li.label_version_id = lv.id
+        LEFT JOIN ingredients i ON i.id = li.ingredient_id
+        WHERE pp.id = {marker}
+        ORDER BY li.position
     """
     with connection() as conn:
-        records = [dict(row) for row in conn.execute(statement, (product_id,)).fetchall()]
+        records = [dict(row) for row in conn.execute(statement, (package_id,)).fetchall()]
     if not records:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return rows_to_product(records)
+        raise HTTPException(status_code=404, detail="Product package not found")
+    return rows_to_package(records)

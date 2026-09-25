@@ -22,6 +22,7 @@ Chrome browser UI  →  FastAPI `/api`  →  PostgreSQL (production)
 - The frontend is a small Vite application. It stays browser-first for scanning and voice capture.
 - [`api/index.py`](api/index.py) exports the FastAPI app that Vercel can deploy as a Python Function.
 - [`data/schema.sql`](data/schema.sql) is the relational source of truth for products, ingredients, and their product-specific assessments.
+- The catalog keeps **manufacturer → beverage family → variant/flavor → market-specific package → dated label version** separate. A 12 oz can and a 20 oz bottle are never silently treated as one item.
 - SQLite is deliberately local-only. Vercel functions have no durable local disk, so production must receive a PostgreSQL `DATABASE_URL` from a managed provider.
 
 ## Run locally
@@ -60,13 +61,25 @@ The seed dataset is intentionally small. See [the research note](docs/research/s
 - Do not calculate an ADI percentage unless the label or manufacturer actually discloses the ingredient amount.
 - Do not retain user images or videos in this MVP. OCR occurs in the browser and the upload is not sent to an application server.
 
+## Nationwide catalog coverage
+
+The goal is **all discoverable, currently sold packaged non-alcoholic beverages in the United States**, not an unprovable claim that every beverage ever produced is included. The lawful nationwide baseline will be USDA FoodData Central's public-domain Branded Foods data, then verified and refreshed with package observations, authorized manufacturer label sources, and licensed barcode/product-data sources where required.
+
+The full acquisition, licensing, and update plan is in [the US beverage catalog research note](docs/research/us-beverage-catalog-sources.md). It establishes these rules:
+
+- FoodData Central provides broad coverage, but manufacturer submissions are voluntary, so every record retains a source and verification state.
+- A GTIN/UPC identifies a **package**, not automatically a formula. GS1-scale lookup needs the appropriate commercial access/licence.
+- Do not bulk-scrape or republish manufacturer pages, product images, logos, or marketing copy. Manufacturer facts are used for review and provenance only where permitted.
+- A Vercel Function is not the place for a nationwide bulk import. Run FoodData Central import/update jobs in a dedicated worker, then connect the resulting PostgreSQL database to Vercel.
+
 ## Recommended next steps
 
 1. Connect the browser UI to the FastAPI read endpoints, replacing its temporary client-side seed lookup.
-2. Add barcode lookup (for exact package-size matching) and a reviewed “unmatched label” queue.
-3. Add auth, consent, retention controls, and a moderation/review workflow before retaining any uploads.
-4. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before public release.
-5. Add food products only after the beverage source/provenance workflow is stable.
+2. Build the external FoodData Central ETL worker and its PostgreSQL migration, beginning with current US branded beverage records.
+3. Add barcode lookup (for exact package-size matching) and a reviewed “unmatched label” queue.
+4. Add auth, consent, retention controls, and a moderation/review workflow before retaining any uploads.
+5. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before public release.
+6. Add food products only after the beverage source/provenance workflow is stable.
 
 ## Scope statement
 

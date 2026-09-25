@@ -12,6 +12,8 @@ The initial Vite MVP builds with `npm run build`; it supports text, image OCR, s
 
 - `src/data.js` is a deliberately small, versioned seed dataset.
 - `api/index.py` exports the Vercel-compatible FastAPI app; `data/schema.sql` models products, ingredients, and product-specific assessments.
+- The catalog is normalized as manufacturer → family → variant → package → label version → ingredient assessment. Read `CONTEXT.md` before changing those terms.
+- [US beverage catalog source research](docs/research/us-beverage-catalog-sources.md) selects USDA FoodData Central Branded Foods as the lawful nationwide discovery baseline. Do not bulk scrape manufacturer pages.
 - `scripts/bootstrap_db.py` seeds local SQLite. Production must use a PostgreSQL `DATABASE_URL` from a Vercel Marketplace database integration; never depend on SQLite persistence in a Vercel Function.
 - OCR is processed in the browser with Tesseract.js; uploads are not persisted by this app.
 - Voice recognition relies on `SpeechRecognition`/`webkitSpeechRecognition`, which is browser-dependent.
@@ -28,7 +30,7 @@ The initial Vite MVP builds with `npm run build`; it supports text, image OCR, s
 
 ## Next recommended task
 
-Connect the browser lookup to `GET /api/products` and `GET /api/products/{id}`, then add a database-backed reviewed ingestion workflow. Begin with an admin-only approval status; do not collect or retain consumer uploads without explicit consent and documented retention/deletion controls.
+Connect the browser lookup to `GET /api/products` and `GET /api/products/{id}`, then build a separate FoodData Central ETL worker into production PostgreSQL. It must retain FDC ID, source release, fetch time, source hash, package/GTIN, market, label version, and verification state. Do not run nationwide import inside Vercel Functions or collect/retain consumer uploads without explicit consent and documented retention/deletion controls.
 
 ## Usage-limit continuation instruction
 
