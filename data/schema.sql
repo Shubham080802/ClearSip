@@ -29,6 +29,21 @@ CREATE TABLE IF NOT EXISTS product_packages (
   lifecycle_status TEXT NOT NULL DEFAULT 'unknown' CHECK (lifecycle_status IN ('active', 'discontinued', 'unknown'))
 );
 
+CREATE TABLE IF NOT EXISTS catalog_discoveries (
+  id TEXT PRIMARY KEY,
+  manufacturer_name TEXT NOT NULL,
+  beverage_family_name TEXT NOT NULL,
+  variant_name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  market TEXT NOT NULL,
+  observed_package_sizes TEXT,
+  package_size_scope TEXT NOT NULL CHECK (package_size_scope IN ('variant', 'family', 'unknown')),
+  availability_note TEXT,
+  source_url TEXT NOT NULL,
+  discovered_on TEXT NOT NULL,
+  verification_status TEXT NOT NULL CHECK (verification_status IN ('discovery_candidate', 'needs_package_verification'))
+);
+
 CREATE TABLE IF NOT EXISTS source_records (
   id TEXT PRIMARY KEY,
   publisher TEXT NOT NULL,
@@ -61,6 +76,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS one_current_label_per_package ON label_version
 CREATE TABLE IF NOT EXISTS ingredients (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS ingredient_profiles (
+  ingredient_id TEXT PRIMARY KEY REFERENCES ingredients(id),
+  functional_class TEXT NOT NULL,
+  plain_language_summary TEXT NOT NULL,
+  intake_context TEXT NOT NULL,
+  evidence_level TEXT NOT NULL CHECK (evidence_level IN ('established_guidance', 'limited_or_contextual', 'label_only', 'unknown')),
+  source_url TEXT
 );
 
 CREATE TABLE IF NOT EXISTS label_ingredients (

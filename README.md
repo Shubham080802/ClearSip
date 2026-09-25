@@ -72,6 +72,12 @@ The full acquisition, licensing, and update plan is in [the US beverage catalog 
 - Do not bulk-scrape or republish manufacturer pages, product images, logos, or marketing copy. Manufacturer facts are used for review and provenance only where permitted.
 - A Vercel Function is not the place for a nationwide bulk import. Run FoodData Central import/update jobs in a dedicated worker, then connect the resulting PostgreSQL database to Vercel.
 
+### Current catalog status
+
+The local development dataset now has two **package-label records** with ingredient assessments and 29 **source-backed catalog discoveries** across Coca-Cola, Sprite, Powerade, Dasani, Pepsi, Mountain Dew, Gatorade, Aquafina, Monster, Red Bull, Keurig Dr Pepper brands, and LaCroix. Discovery records retain available size evidence and a source link, but intentionally have no guessed ingredient panel. They graduate to package-label records only after the exact US package/label is verified.
+
+See [the initial portfolio list](docs/research/initial-us-beverage-portfolio.md) for the beverage families, flavors, package-size evidence, and verification status.
+
 ## Recommended next steps
 
 1. Connect the browser UI to the FastAPI read endpoints, replacing its temporary client-side seed lookup.

@@ -34,7 +34,7 @@ def rows_to_package(rows: list[dict]) -> dict:
         "label_observed_on": first["label_observed_on"],
         "source": {"publisher": first["publisher"], "url": first["source_url"], "accessed_on": first["accessed_on"]},
         "ingredients": [
-            {"name": row["ingredient_name"], "role": row["role"], "assessment": row["assessment"], "evidence_status": row["evidence_status"], "source_url": row["ingredient_source_url"]}
+            {"name": row["ingredient_name"], "role": row["role"], "assessment": row["assessment"], "evidence_status": row["evidence_status"], "functional_class": row["functional_class"], "plain_language_summary": row["plain_language_summary"], "intake_context": row["intake_context"], "profile_evidence_level": row["profile_evidence_level"], "source_url": row["ingredient_source_url"] or row["profile_source_url"]}
             for row in rows if row["ingredient_name"]
         ],
     }
@@ -67,6 +67,23 @@ def search_products(query: str = Query(min_length=2, max_length=120)) -> list[di
     return [dict(record) for record in records]
 
 
+@app.get("/api/catalog-discoveries")
+def catalog_discoveries(limit: int = Query(default=100, ge=1, le=500)) -> list[dict]:
+    """Source-backed public product candidates awaiting exact package-label review."""
+    marker = placeholder()
+    statement = f"""
+        SELECT id, manufacturer_name, beverage_family_name, variant_name, category, market,
+               observed_package_sizes, package_size_scope, availability_note, source_url,
+               discovered_on, verification_status
+        FROM catalog_discoveries
+        ORDER BY manufacturer_name, beverage_family_name, variant_name
+        LIMIT {marker}
+    """
+    with connection() as conn:
+        records = conn.execute(statement, (limit,)).fetchall()
+    return [dict(record) for record in records]
+
+
 @app.get("/api/products/{package_id}")
 def product_detail(package_id: str) -> dict:
     marker = placeholder()
@@ -77,7 +94,9 @@ def product_detail(package_id: str) -> dict:
                lv.caffeine_mg, lv.verification_status, lv.label_observed_on,
                s.publisher, s.url AS source_url, s.accessed_on,
                i.name AS ingredient_name, li.role, li.assessment, li.evidence_status,
-               li.source_url AS ingredient_source_url
+               li.source_url AS ingredient_source_url, ip.functional_class,
+               ip.plain_language_summary, ip.intake_context,
+               ip.evidence_level AS profile_evidence_level, ip.source_url AS profile_source_url
         FROM product_packages pp
         JOIN beverage_variants bv ON bv.id = pp.variant_id
         JOIN beverage_families bf ON bf.id = bv.family_id
@@ -86,6 +105,7 @@ def product_detail(package_id: str) -> dict:
         JOIN source_records s ON s.id = lv.source_id
         LEFT JOIN label_ingredients li ON li.label_version_id = lv.id
         LEFT JOIN ingredients i ON i.id = li.ingredient_id
+        LEFT JOIN ingredient_profiles ip ON ip.ingredient_id = i.id
         WHERE pp.id = {marker}
         ORDER BY li.position
     """

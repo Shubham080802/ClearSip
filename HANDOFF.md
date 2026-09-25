@@ -6,7 +6,7 @@
 
 ## Current state
 
-The initial Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, and browser speech recognition. A FastAPI/SQL foundation is now also in place and has been validated against locally seeded SQLite. The only seed products are US Coca-Cola Zero Sugar and Monster Energy Zero Sugar.
+The initial Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, and browser speech recognition. A FastAPI/SQL foundation is now also in place and has been validated against locally seeded SQLite. There are two detailed US package-label seed products and 29 source-backed catalog discoveries awaiting exact label verification.
 
 ## Important implementation choices
 
@@ -14,6 +14,7 @@ The initial Vite MVP builds with `npm run build`; it supports text, image OCR, s
 - `api/index.py` exports the Vercel-compatible FastAPI app; `data/schema.sql` models products, ingredients, and product-specific assessments.
 - The catalog is normalized as manufacturer → family → variant → package → label version → ingredient assessment. Read `CONTEXT.md` before changing those terms.
 - [US beverage catalog source research](docs/research/us-beverage-catalog-sources.md) selects USDA FoodData Central Branded Foods as the lawful nationwide discovery baseline. Do not bulk scrape manufacturer pages.
+- [Initial portfolio research](docs/research/initial-us-beverage-portfolio.md) provides public source links and package-size evidence for the 29 discoveries. A candidate has no inferred ingredients; only reviewed label versions receive assessments.
 - `scripts/bootstrap_db.py` seeds local SQLite. Production must use a PostgreSQL `DATABASE_URL` from a Vercel Marketplace database integration; never depend on SQLite persistence in a Vercel Function.
 - OCR is processed in the browser with Tesseract.js; uploads are not persisted by this app.
 - Voice recognition relies on `SpeechRecognition`/`webkitSpeechRecognition`, which is browser-dependent.
