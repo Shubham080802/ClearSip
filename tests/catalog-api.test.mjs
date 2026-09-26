@@ -35,7 +35,7 @@ const calls = [];
 const fetchFn = async (url) => {
   calls.push(url);
   const response = url.includes("/catalog-summary")
-    ? { reviewed_package_labels: 2, catalog_discoveries: 29 }
+    ? { reviewed_package_labels: 2, catalog_discoveries: 50 }
     : url.includes("/catalog-discoveries")
     ? [{ id: "cola-discovery", variant_name: "Cola Zero" }]
     : url.includes("/products?")
@@ -50,7 +50,7 @@ assert.equal(display.ingredients[0].status, "watch");
 assert.equal(display.assessment.title, "The visible sugar claim appears aligned with the disclosed label facts.");
 assert.equal(calls.length, 2);
 assert.equal(toDisplayProduct(product).facts.length, 6);
-assert.deepEqual(await getCatalogSummary(fetchFn), { reviewed_package_labels: 2, catalog_discoveries: 29 });
+assert.deepEqual(await getCatalogSummary(fetchFn), { reviewed_package_labels: 2, catalog_discoveries: 50 });
 assert.deepEqual(await getCatalogDiscoveries("", fetchFn), [{ id: "cola-discovery", variant_name: "Cola Zero" }]);
 assert.deepEqual(await findCatalogDiscovery("Cola Zero", fetchFn), { id: "cola-discovery", variant_name: "Cola Zero" });
 assert.equal((await findCatalogProductByGtin("012345678905", fetchFn)).name, "Cola Zero");
