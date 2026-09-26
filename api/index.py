@@ -66,7 +66,9 @@ def search_products(query: str = Query(min_length=2, max_length=120)) -> list[di
     terms = re.findall(r"[a-z0-9]+", query.lower())[:12]
     if not terms:
         return []
-    searchable_name = "LOWER(bv.display_name || ' ' || m.name || ' ' || bf.name)"
+    # Prefer the consumer-facing product and family names. Matching the parent
+    # manufacturer here would make a query such as "Coca" return Powerade too.
+    searchable_name = "LOWER(bv.display_name || ' ' || bf.name)"
     term_filters = " AND ".join(f"{searchable_name} LIKE {marker}" for _ in terms)
     statement = f"""
         SELECT pp.id, bv.display_name, m.name AS manufacturer, bf.name AS family,

@@ -12,6 +12,7 @@ DATABASE = ROOT / "data" / "clearsip.db"
 SCHEMA = ROOT / "data" / "schema.sql"
 FDA_SWEETENER_SOURCE = "https://www.fda.gov/food/food-additives-petitions/aspartame-and-other-sweeteners-food"
 FDA_CAFFEINE_SOURCE = "https://www.fda.gov/consumers/consumer-updates/spilling-beans-how-much-caffeine-too-much"
+POWERADE_SOURCE = "https://www.powerade.com/products/powerade"
 
 
 def main() -> None:
@@ -26,14 +27,22 @@ def main() -> None:
             ("monster-energy", "Monster Energy", "https://www.monsterenergy.com/"),
         ])
         conn.executemany("INSERT INTO beverage_families VALUES (?, ?, ?)", [
-            ("coca-cola", "coca-cola-company", "Coca-Cola"), ("monster-energy", "monster-energy", "Monster Energy"),
+            ("coca-cola", "coca-cola-company", "Coca-Cola"),
+            ("powerade", "coca-cola-company", "Powerade"),
+            ("monster-energy", "monster-energy", "Monster Energy"),
         ])
         conn.executemany("INSERT INTO beverage_variants VALUES (?, ?, ?, ?, ?)", [
             ("coca-cola-zero-sugar", "coca-cola", "Coca-Cola Zero Sugar", None, "carbonated soft drink"),
+            ("powerade-grape", "powerade", "Powerade Grape", "Grape", "sports drink"),
+            ("powerade-lemon-lime", "powerade", "Powerade Lemon Lime", "Lemon Lime", "sports drink"),
+            ("powerade-orange", "powerade", "Powerade Orange", "Orange", "sports drink"),
             ("monster-zero-sugar", "monster-energy", "Monster Energy Zero Sugar", None, "energy drink"),
         ])
         conn.executemany("INSERT INTO product_packages VALUES (?, ?, ?, ?, ?, ?, ?)", [
             ("coca-cola-zero-sugar-12oz-us", "coca-cola-zero-sugar", None, None, "United States", "12 fl oz can", "active"),
+            ("powerade-grape-20oz-us", "powerade-grape", None, None, "United States", "20 fl oz bottle", "active"),
+            ("powerade-lemon-lime-20oz-us", "powerade-lemon-lime", None, None, "United States", "20 fl oz bottle", "active"),
+            ("powerade-orange-20oz-us", "powerade-orange", None, None, "United States", "20 fl oz bottle", "active"),
             ("monster-zero-sugar-16oz-us", "monster-zero-sugar", None, None, "United States", "16 fl oz can", "active"),
         ])
         conn.executemany("INSERT INTO catalog_discoveries VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
@@ -128,14 +137,23 @@ def main() -> None:
         ])
         conn.executemany("INSERT INTO source_records VALUES (?, ?, ?, ?, ?, ?, ?)", [
             ("coca-cola-zero-source", "The Coca-Cola Company", "https://www.coca-cola.com/us/en/brands/coca-cola/products/zero", "United States", "2026-09-24", "manufacturer_page", None),
+            ("powerade-us-products-source", "The Coca-Cola Company / Powerade", POWERADE_SOURCE, "United States", "2026-09-26", "manufacturer_label", None),
             ("monster-zero-source", "Monster Energy", "https://www.monsterenergy.com/en-us/energy-drinks/monster-energy/zero-sugar/", "United States", "2026-09-24", "manufacturer_page", None),
         ])
         conn.executemany("INSERT INTO label_versions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
             ("coca-cola-zero-2026-09-24", "coca-cola-zero-sugar-12oz-us", "coca-cola-zero-source", "12 fl oz (355 mL)", 1, 0, 0, 0, 0, 40, 34, "Carbonated water, caramel color, phosphoric acid, aspartame, potassium benzoate (to protect taste), natural flavors, potassium citrate, acesulfame potassium, caffeine, stevia extract.", "Phenylketonurics: Contains phenylalanine.", "Zero Sugar", "manufacturer_verified", "2026-09-24", 1),
+            ("powerade-grape-2026-09-26", "powerade-grape-20oz-us", "powerade-us-products-source", "12 fl oz (355 mL)", None, 80, 0, 21, 21, 240, None, "Water, high fructose corn syrup, less than 0.5% of: citric acid, electrolytes (salt, sodium citrate, magnesium and calcium chlorides, mono-potassium phosphate), natural and artificial flavors, vitamins B12 and C (cyanocobalamin and ascorbic acid), calcium disodium EDTA (to protect color), Red 40, Blue 1.", None, None, "manufacturer_verified", "2026-09-26", 1),
+            ("powerade-lemon-lime-2026-09-26", "powerade-lemon-lime-20oz-us", "powerade-us-products-source", "12 fl oz (355 mL)", None, 80, 0, 21, 21, 240, None, "Water, high fructose corn syrup, less than 0.5% of: citric acid, electrolytes (salt, sodium citrate, magnesium and calcium chlorides, mono-potassium phosphate), vitamins B12 and C (cyanocobalamin and ascorbic acid), natural flavors, gum acacia, glycerol ester of rosin, calcium disodium EDTA (to protect color), Yellow 5.", None, None, "manufacturer_verified", "2026-09-26", 1),
+            ("powerade-orange-2026-09-26", "powerade-orange-20oz-us", "powerade-us-products-source", "12 fl oz (355 mL)", None, 80, 0, 21, 21, 240, None, "Water, high fructose corn syrup, less than 0.5% of: citric acid, electrolytes (salt, sodium citrate, magnesium and calcium chlorides, mono-potassium phosphate), vitamins B12 and C (cyanocobalamin and ascorbic acid), natural and artificial flavors, gum acacia, glycerol ester of rosin, calcium disodium EDTA (to protect color), Yellow 5, Yellow 6.", None, None, "manufacturer_verified", "2026-09-26", 1),
             ("monster-zero-2026-09-24", "monster-zero-sugar-16oz-us", "monster-zero-source", "16 fl oz (473 mL)", 1, 10, 0, 0, 0, 380, 160, "Carbonated water, citric acid, erythritol, natural flavors, taurine, sodium citrate, Panax ginseng flavor, L-carnitine L-tartrate, caffeine, sucralose, sorbic acid, benzoic acid, fruit juice (color), niacinamide, acesulfame potassium, salt, D-glucuronolactone, guarana extract, inositol, pyridoxine hydrochloride, riboflavin, cyanocobalamin.", None, "Zero Sugar", "needs_package_verification", "2026-09-24", 1),
         ])
         conn.executemany("INSERT INTO ingredients VALUES (?, ?)", [
             ("caffeine", "Caffeine"), ("aspartame", "Aspartame"), ("ace-k", "Acesulfame potassium"), ("sucralose", "Sucralose"), ("erythritol", "Erythritol"), ("taurine", "Taurine"),
+            ("high-fructose-corn-syrup", "High fructose corn syrup"), ("electrolytes", "Electrolytes"),
+            ("natural-artificial-flavors", "Natural and artificial flavors"), ("natural-flavors", "Natural flavors"),
+            ("vitamins-b12-c", "Vitamins B12 and C"), ("calcium-disodium-edta", "Calcium disodium EDTA"),
+            ("red-40", "Red 40"), ("blue-1", "Blue 1"), ("gum-acacia", "Gum acacia"),
+            ("glycerol-ester-of-rosin", "Glycerol ester of rosin"), ("yellow-5", "Yellow 5"), ("yellow-6", "Yellow 6"),
         ])
         conn.executemany("INSERT INTO ingredient_profiles VALUES (?, ?, ?, ?, ?, ?)", [
             ("caffeine", "stimulant", "A stimulant that can increase alertness.", "The label amount should be considered alongside all caffeine consumed that day. FDA's 400 mg/day reference is for most healthy adults, not an individual recommendation.", "established_guidance", FDA_CAFFEINE_SOURCE),
@@ -144,6 +162,18 @@ def main() -> None:
             ("sucralose", "high-intensity sweetener", "A low- or no-calorie sweetener used in place of sugar.", "FDA lists an acceptable daily intake of 5 mg/kg/day. Product labels generally do not disclose the amount.", "established_guidance", FDA_SWEETENER_SOURCE),
             ("erythritol", "sugar alcohol sweetener", "A sugar alcohol used to provide sweetness with fewer calories than sugar.", "A label amount, when present, is a fact; the ingredient name alone does not establish a personalized health effect.", "limited_or_contextual", None),
             ("taurine", "amino-sulfonic compound", "A compound often added to energy drinks.", "Its presence is not evidence that a drink will improve health or offset sleep loss.", "limited_or_contextual", None),
+            ("high-fructose-corn-syrup", "caloric sweetener", "A source of added sugars in this label.", "The product lists 21 g of added sugars per serving; that package fact is more informative than the ingredient name alone.", "label_only", POWERADE_SOURCE),
+            ("electrolytes", "mineral salts", "A label term for declared salts and mineral compounds.", "The label lists sodium and other mineral salts; their presence does not make a drink necessary for every activity.", "label_only", POWERADE_SOURCE),
+            ("natural-artificial-flavors", "flavoring", "Flavoring ingredients declared as natural and artificial flavors.", "The collective flavor label does not specify every flavoring substance or its amount.", "label_only", POWERADE_SOURCE),
+            ("natural-flavors", "flavoring", "Flavoring ingredients declared as natural flavors.", "The collective flavor label does not specify every flavoring substance or its amount.", "label_only", POWERADE_SOURCE),
+            ("vitamins-b12-c", "vitamin additions", "Added vitamins B12 and C declared on the ingredient list.", "Their presence is a label fact and does not by itself establish that a drink is health-promoting.", "label_only", POWERADE_SOURCE),
+            ("calcium-disodium-edta", "color-protection additive", "An ingredient the label says is used to protect color.", "The ingredient statement gives this stated function; it does not disclose its amount.", "label_only", POWERADE_SOURCE),
+            ("red-40", "color additive", "A color additive declared on the ingredient list.", "The label establishes its presence but not its amount or an individualized effect.", "label_only", POWERADE_SOURCE),
+            ("blue-1", "color additive", "A color additive declared on the ingredient list.", "The label establishes its presence but not its amount or an individualized effect.", "label_only", POWERADE_SOURCE),
+            ("gum-acacia", "stabilizer", "A plant-derived gum used as a stabilizer in this label.", "The label establishes its presence but not its amount or an individualized effect.", "label_only", POWERADE_SOURCE),
+            ("glycerol-ester-of-rosin", "stabilizer", "A stabilizing ingredient declared on the label.", "The label establishes its presence but not its amount or an individualized effect.", "label_only", POWERADE_SOURCE),
+            ("yellow-5", "color additive", "A color additive declared on the ingredient list.", "The label establishes its presence but not its amount or an individualized effect.", "label_only", POWERADE_SOURCE),
+            ("yellow-6", "color additive", "A color additive declared on the ingredient list.", "The label establishes its presence but not its amount or an individualized effect.", "label_only", POWERADE_SOURCE),
         ])
         conn.executemany("INSERT INTO label_ingredients VALUES (?, ?, ?, ?, ?, ?, ?)", [
             ("coca-cola-zero-2026-09-24", "aspartame", 1, "High-intensity sweetener", "FDA lists an ADI of 50 mg/kg/day. The label amount is not disclosed, so an intake comparison is unavailable.", "context_matters", FDA_SWEETENER_SOURCE),
@@ -154,6 +184,30 @@ def main() -> None:
             ("monster-zero-2026-09-24", "sucralose", 3, "High-intensity sweetener", "FDA lists an ADI of 5 mg/kg/day. The label amount is not disclosed, so an intake comparison is unavailable.", "context_matters", FDA_SWEETENER_SOURCE),
             ("monster-zero-2026-09-24", "ace-k", 4, "High-intensity sweetener", "FDA lists an ADI of 15 mg/kg/day. The label amount is not disclosed, so an intake comparison is unavailable.", "context_matters", FDA_SWEETENER_SOURCE),
             ("monster-zero-2026-09-24", "caffeine", 5, "Stimulant", "160 mg per listed serving. FDA's 400 mg/day reference applies to most healthy adults, not every person.", "worth_watching", FDA_CAFFEINE_SOURCE),
+            ("powerade-grape-2026-09-26", "high-fructose-corn-syrup", 1, "Added-sugar source", "The package lists 21 g added sugars per 12 fl oz serving (42% Daily Value).", "worth_watching", POWERADE_SOURCE),
+            ("powerade-grape-2026-09-26", "electrolytes", 2, "Mineral salts", "The label identifies salt and mineral compounds as electrolytes; 240 mg sodium is listed per serving.", "label_context", POWERADE_SOURCE),
+            ("powerade-grape-2026-09-26", "natural-artificial-flavors", 3, "Flavoring", "The label groups flavoring ingredients together and does not list their amounts.", "not_fully_specified", POWERADE_SOURCE),
+            ("powerade-grape-2026-09-26", "vitamins-b12-c", 4, "Vitamin additions", "Vitamins B12 and C are declared; their presence does not establish a health outcome.", "context_matters", POWERADE_SOURCE),
+            ("powerade-grape-2026-09-26", "calcium-disodium-edta", 5, "Color-protection additive", "The label states it is used to protect color.", "label_context", POWERADE_SOURCE),
+            ("powerade-grape-2026-09-26", "red-40", 6, "Color additive", "Declared color additive; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-grape-2026-09-26", "blue-1", 7, "Color additive", "Declared color additive; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "high-fructose-corn-syrup", 1, "Added-sugar source", "The package lists 21 g added sugars per 12 fl oz serving (42% Daily Value).", "worth_watching", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "electrolytes", 2, "Mineral salts", "The label identifies salt and mineral compounds as electrolytes; 240 mg sodium is listed per serving.", "label_context", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "vitamins-b12-c", 3, "Vitamin additions", "Vitamins B12 and C are declared; their presence does not establish a health outcome.", "context_matters", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "natural-flavors", 4, "Flavoring", "The label groups flavoring ingredients together and does not list their amounts.", "not_fully_specified", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "gum-acacia", 5, "Stabilizer", "Declared stabilizer; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "glycerol-ester-of-rosin", 6, "Stabilizer", "Declared stabilizer; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "calcium-disodium-edta", 7, "Color-protection additive", "The label states it is used to protect color.", "label_context", POWERADE_SOURCE),
+            ("powerade-lemon-lime-2026-09-26", "yellow-5", 8, "Color additive", "Declared color additive; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "high-fructose-corn-syrup", 1, "Added-sugar source", "The package lists 21 g added sugars per 12 fl oz serving (42% Daily Value).", "worth_watching", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "electrolytes", 2, "Mineral salts", "The label identifies salt and mineral compounds as electrolytes; 240 mg sodium is listed per serving.", "label_context", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "natural-artificial-flavors", 3, "Flavoring", "The label groups flavoring ingredients together and does not list their amounts.", "not_fully_specified", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "vitamins-b12-c", 4, "Vitamin additions", "Vitamins B12 and C are declared; their presence does not establish a health outcome.", "context_matters", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "gum-acacia", 5, "Stabilizer", "Declared stabilizer; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "glycerol-ester-of-rosin", 6, "Stabilizer", "Declared stabilizer; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "calcium-disodium-edta", 7, "Color-protection additive", "The label states it is used to protect color.", "label_context", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "yellow-5", 8, "Color additive", "Declared color additive; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
+            ("powerade-orange-2026-09-26", "yellow-6", 9, "Color additive", "Declared color additive; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
         ])
     from api.classification import refresh_assessments
 
