@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from fastapi import FastAPI, HTTPException, Query
 
 from api.database import connection, placeholder
@@ -61,6 +63,11 @@ def health() -> dict[str, str]:
 @app.get("/api/products")
 def search_products(query: str = Query(min_length=2, max_length=120)) -> list[dict]:
     marker = placeholder()
+    terms = re.findall(r"[a-z0-9]+", query.lower())[:12]
+    if not terms:
+        return []
+    searchable_name = "LOWER(bv.display_name || ' ' || m.name || ' ' || bf.name)"
+    term_filters = " AND ".join(f"{searchable_name} LIKE {marker}" for _ in terms)
     statement = f"""
         SELECT pp.id, bv.display_name, m.name AS manufacturer, bf.name AS family,
                pp.market, pp.package_description, pp.gtin, pp.fdc_id, lv.caffeine_mg, lv.verification_status
@@ -69,14 +76,12 @@ def search_products(query: str = Query(min_length=2, max_length=120)) -> list[di
         JOIN beverage_families bf ON bf.id = bv.family_id
         JOIN manufacturers m ON m.id = bf.manufacturer_id
         JOIN label_versions lv ON lv.package_id = pp.id AND lv.is_current = 1
-        WHERE LOWER(bv.display_name) LIKE LOWER({marker})
-           OR LOWER(m.name) LIKE LOWER({marker})
-           OR LOWER(bf.name) LIKE LOWER({marker})
+        WHERE {term_filters}
         ORDER BY bv.display_name, pp.package_description
         LIMIT 25
     """
     with connection() as conn:
-        records = conn.execute(statement, (f"%{query}%", f"%{query}%", f"%{query}%")).fetchall()
+        records = conn.execute(statement, tuple(f"%{term}%" for term in terms)).fetchall()
     return [dict(record) for record in records]
 
 

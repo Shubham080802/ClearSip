@@ -21,6 +21,7 @@ assert coke["label_context"]["overall_status"] == "caffeine_context"
 assert monster["label_context"]["overall_status"] == "caffeine_context"
 assert "40% of FDA" in monster["label_context"]["frequent_intake_context"]
 assert len(search_products("Coca")) == 1
+assert search_products("Monster Zero Sugar")[0]["display_name"] == "Monster Energy Zero Sugar"
 assert len(catalog_discoveries(limit=100)) == 29
 assert catalog_summary() == {"reviewed_package_labels": 2, "catalog_discoveries": 29}
 
