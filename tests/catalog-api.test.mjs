@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { findCatalogProduct, getCatalogSummary, normalizeName, toDisplayProduct } from "../src/catalog-api.js";
+import { findCatalogProduct, getCatalogDiscoveries, getCatalogSummary, normalizeName, toDisplayProduct } from "../src/catalog-api.js";
 import { MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, validateScanFile } from "../src/scan-guardrails.js";
 
 const product = {
@@ -36,6 +36,8 @@ const fetchFn = async (url) => {
   calls.push(url);
   const response = url.includes("/catalog-summary")
     ? { reviewed_package_labels: 2, catalog_discoveries: 29 }
+    : url.includes("/catalog-discoveries")
+    ? [{ id: "cola-discovery", variant_name: "Cola Zero" }]
     : url.includes("/products?")
     ? [{ id: "cola-12", display_name: "Cola Zero" }]
     : product;
@@ -49,6 +51,7 @@ assert.equal(display.assessment.title, "The visible sugar claim appears aligned 
 assert.equal(calls.length, 2);
 assert.equal(toDisplayProduct(product).facts.length, 6);
 assert.deepEqual(await getCatalogSummary(fetchFn), { reviewed_package_labels: 2, catalog_discoveries: 29 });
+assert.deepEqual(await getCatalogDiscoveries(fetchFn), [{ id: "cola-discovery", variant_name: "Cola Zero" }]);
 assert.equal(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES }, "image"), null);
 assert.match(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES + 1 }, "image"), /12 MB/);
 assert.equal(validateScanFile({ type: "video/mp4", size: MAX_VIDEO_BYTES }, "video"), null);

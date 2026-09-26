@@ -1,6 +1,6 @@
 import { createWorker } from "tesseract.js";
 import { dataVersion, findDrink } from "./data.js";
-import { findCatalogProduct, getCatalogSummary } from "./catalog-api.js";
+import { findCatalogProduct, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import "./style.css";
 
@@ -14,6 +14,7 @@ const result = document.querySelector("#result");
 const emptyState = document.querySelector("#empty-state");
 const reviewedCount = document.querySelector("#catalog-reviewed-count");
 const discoveryCount = document.querySelector("#catalog-discovery-count");
+const discoveryList = document.querySelector("#discovery-list");
 
 const statusLabels = { watch: "Worth watching", context: "Context matters", neutral: "Label context", unknown: "Not fully specified" };
 
@@ -66,7 +67,36 @@ async function loadCatalogSummary() {
   }
 }
 
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : "#";
+  } catch {
+    return "#";
+  }
+}
+
+function discoveryStatus(status) {
+  return status === "needs_package_verification" ? "Needs package label" : "Discovery candidate";
+}
+
+async function loadCatalogDiscoveries() {
+  try {
+    const discoveries = await getCatalogDiscoveries();
+    discoveryList.innerHTML = discoveries.map((drink) => `
+      <article class="discovery-card">
+        <div><p>${escapeHtml(drink.category)}</p><h3>${escapeHtml(drink.variant_name)}</h3><span>${escapeHtml(drink.manufacturer_name)} · ${escapeHtml(drink.beverage_family_name)}</span></div>
+        <div class="discovery-meta"><strong>${escapeHtml(discoveryStatus(drink.verification_status))}</strong><span>${escapeHtml(drink.observed_package_sizes || "Package size not yet verified")}</span></div>
+        <a href="${escapeHtml(safeExternalUrl(drink.source_url))}" target="_blank" rel="noreferrer">View source ↗</a>
+      </article>`).join("");
+  } catch (error) {
+    console.warn("Catalog discovery list is unavailable.", error);
+    discoveryList.textContent = "The discovery list is temporarily unavailable. Reviewed package-label results are still searchable above.";
+  }
+}
+
 loadCatalogSummary();
+loadCatalogDiscoveries();
 
 form.addEventListener("submit", async (event) => { event.preventDefault(); await handleQuery(query.value); });
 document.querySelectorAll("[data-drink]").forEach((button) => {
