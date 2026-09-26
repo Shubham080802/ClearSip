@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 subprocess.run([sys.executable, "scripts/bootstrap_db.py"], cwd=ROOT, check=True)
 
 sys.path.insert(0, str(ROOT))
-from api.index import catalog_discoveries, product_detail, search_products
+from api.index import catalog_discoveries, catalog_summary, product_detail, search_products
 
 coke = product_detail("coca-cola-zero-sugar-12oz-us")
 monster = product_detail("monster-zero-sugar-16oz-us")
@@ -22,5 +22,6 @@ assert monster["label_context"]["overall_status"] == "caffeine_context"
 assert "40% of FDA" in monster["label_context"]["frequent_intake_context"]
 assert len(search_products("Coca")) == 1
 assert len(catalog_discoveries(limit=100)) == 29
+assert catalog_summary() == {"reviewed_package_labels": 2, "catalog_discoveries": 29}
 
 print("API smoke tests passed")

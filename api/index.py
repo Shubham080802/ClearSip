@@ -97,6 +97,20 @@ def catalog_discoveries(limit: int = Query(default=100, ge=1, le=500)) -> list[d
     return [dict(record) for record in records]
 
 
+@app.get("/api/catalog-summary")
+def catalog_summary() -> dict[str, int]:
+    """Return the current public coverage counts without returning catalog rows."""
+    with connection() as conn:
+        record = conn.execute(
+            """
+            SELECT
+                (SELECT COUNT(*) FROM label_versions WHERE is_current = 1) AS reviewed_package_labels,
+                (SELECT COUNT(*) FROM catalog_discoveries) AS catalog_discoveries
+            """
+        ).fetchone()
+    return dict(record)
+
+
 @app.get("/api/products/{package_id}")
 def product_detail(package_id: str) -> dict:
     marker = placeholder()

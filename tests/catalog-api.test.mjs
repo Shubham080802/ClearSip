@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { findCatalogProduct, normalizeName, toDisplayProduct } from "../src/catalog-api.js";
+import { findCatalogProduct, getCatalogSummary, normalizeName, toDisplayProduct } from "../src/catalog-api.js";
 
 const product = {
   id: "cola-12",
@@ -33,7 +33,9 @@ assert.equal(normalizeName("Coca-Cola Zero!"), "coca cola zero");
 const calls = [];
 const fetchFn = async (url) => {
   calls.push(url);
-  const response = url.includes("/products?")
+  const response = url.includes("/catalog-summary")
+    ? { reviewed_package_labels: 2, catalog_discoveries: 29 }
+    : url.includes("/products?")
     ? [{ id: "cola-12", display_name: "Cola Zero" }]
     : product;
   return { ok: true, status: 200, json: async () => response };
@@ -45,5 +47,6 @@ assert.equal(display.ingredients[0].status, "watch");
 assert.equal(display.assessment.title, "The visible sugar claim appears aligned with the disclosed label facts.");
 assert.equal(calls.length, 2);
 assert.equal(toDisplayProduct(product).facts.length, 6);
+assert.deepEqual(await getCatalogSummary(fetchFn), { reviewed_package_labels: 2, catalog_discoveries: 29 });
 
 console.log("catalog API adapter tests passed");

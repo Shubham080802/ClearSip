@@ -82,6 +82,10 @@ async function fetchJson(path, fetchFn) {
   return response.json();
 }
 
+export function getCatalogSummary(fetchFn = fetch) {
+  return fetchJson("/catalog-summary", fetchFn);
+}
+
 export async function findCatalogProduct(query, fetchFn = fetch) {
   const trimmed = query.trim().slice(0, 120);
   if (normalizeName(trimmed).length < 2) return null;

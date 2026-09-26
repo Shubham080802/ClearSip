@@ -1,6 +1,6 @@
 import { createWorker } from "tesseract.js";
 import { dataVersion, findDrink } from "./data.js";
-import { findCatalogProduct } from "./catalog-api.js";
+import { findCatalogProduct, getCatalogSummary } from "./catalog-api.js";
 import "./style.css";
 
 const form = document.querySelector("#search-form");
@@ -11,6 +11,8 @@ const voiceButton = document.querySelector("#voice-button");
 const scanStatus = document.querySelector("#scan-status");
 const result = document.querySelector("#result");
 const emptyState = document.querySelector("#empty-state");
+const reviewedCount = document.querySelector("#catalog-reviewed-count");
+const discoveryCount = document.querySelector("#catalog-discovery-count");
 
 const statusLabels = { watch: "Worth watching", context: "Context matters", neutral: "Label context", unknown: "Not fully specified" };
 
@@ -52,6 +54,18 @@ async function handleQuery(raw, origin = "typed search") {
     return false;
   }
 }
+
+async function loadCatalogSummary() {
+  try {
+    const summary = await getCatalogSummary();
+    reviewedCount.textContent = summary.reviewed_package_labels;
+    discoveryCount.textContent = summary.catalog_discoveries;
+  } catch (error) {
+    console.warn("Catalog summary is unavailable; showing the bundled coverage figures.", error);
+  }
+}
+
+loadCatalogSummary();
 
 form.addEventListener("submit", async (event) => { event.preventDefault(); await handleQuery(query.value); });
 document.querySelectorAll("[data-drink]").forEach((button) => {
