@@ -45,6 +45,34 @@ python3 -m venv .venv
 
 The API is then available at `http://127.0.0.1:8000/api/health` and its interactive docs at `http://127.0.0.1:8000/docs`.
 
+### Label assessment and dataset refresh
+
+Each current package label receives a transparent assessment of the disclosed
+facts: added sugar, saturated fat, sodium, caffeine context, and any visible
+`Zero Sugar` / `sugar-free`, `preservative-free`, or `healthy` claim. It does
+not assign a universal "healthy" or "unhealthy" label, make a disease claim,
+or certify legal compliance. The full rules and language safeguards are in
+[the classification policy](docs/research/beverage-classification-policy.md).
+
+Recalculate all local assessments after changing labels or rules:
+
+```bash
+.venv/bin/python scripts/rebuild_assessments.py
+```
+
+For a focused, reviewable USDA FoodData Central Branded Foods discovery import,
+provide a personal Data.gov API key (never commit it):
+
+```bash
+FDC_API_KEY=your-key .venv/bin/python scripts/import_fdc.py --query "Pepsi Zero Sugar" --page-size 20
+```
+
+`--demo` is only suitable for tiny local experiments. The importer rejects
+non-beverage categories, retains the raw FDC ingredient statement and ID, and
+marks records `catalog_label_match`; it never turns an FDC search hit into a
+package-verified label. Use the offline FDC Branded Foods release in a worker
+for a nationwide backfill, not a Vercel request.
+
 ## Chrome-first and Vercel workflow
 
 Chrome can be your primary working surface: use GitHub's web editor (`github.dev`) for simple source changes, the Vercel dashboard for deployments and environment variables, and Vercel preview URLs to test each pushed commit. The Git repository remains the authoritative source, so browser-made edits should still be committed to GitHub.
