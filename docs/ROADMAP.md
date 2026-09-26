@@ -3,7 +3,7 @@
 ## Completed — make the existing product real
 
 1. **FastAPI catalog lookup.** The UI reads versioned package records from `/api`, displays source/package/review information, and retains a small local fallback only when the API is unavailable.
-2. **Honest discovery coverage.** Users can browse and search the 29 source-backed candidates. Discovery results deliberately withhold ingredient and health panels until a package label is reviewed.
+2. **Honest discovery coverage.** Users can browse and search 50 source-backed candidates, including a 21-product packaged coffee starter batch. Discovery results deliberately withhold ingredient and health panels until a package label is reviewed.
 3. **Public Vercel deployment.** The public GitHub repository deploys to Vercel with a managed PostgreSQL database, immutable schema migrations, and production-safe static/API routing.
 4. **Automated checks.** Client, API, migration, and FDC-import smoke checks run in CI.
 5. **Input and browser safeguards.** OCR stays in the browser; image/video sizes are bounded, content security headers are active, and only required browser permissions remain available.
