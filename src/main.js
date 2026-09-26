@@ -40,11 +40,17 @@ function handleQuery(raw, origin = "typed search") {
   } else {
     result.classList.add("hidden");
     emptyState.classList.remove("hidden");
-    emptyState.innerHTML = `<div class="empty-symbol">?</div><div><h2>We don’t have that drink yet.</h2><p>Try “Coke Zero” or “Monster Zero Sugar.” A production release will add a reviewed-submission flow instead of guessing from an incomplete match.</p></div>`;
+    emptyState.innerHTML = `<div class="empty-badge">?</div><div><p class="eyebrow">NOT IN THE REVIEWED SET YET</p><h2>We couldn’t make a confident match.</h2><p>Try the brand and full drink name. We’d rather show no result than guess from an incomplete label match.</p></div><div class="empty-arrow" aria-hidden="true">↗</div>`;
   }
 }
 
 form.addEventListener("submit", (event) => { event.preventDefault(); handleQuery(query.value); });
+document.querySelectorAll("[data-drink]").forEach((button) => {
+  button.addEventListener("click", () => {
+    query.value = button.dataset.drink;
+    handleQuery(query.value, "quick search");
+  });
+});
 
 async function ocrFile(file, origin) {
   scanStatus.textContent = `Reading ${origin}… this can take a moment.`;

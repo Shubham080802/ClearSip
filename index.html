@@ -3,54 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0c1719" />
+    <meta name="theme-color" content="#171a32" />
     <meta name="description" content="Clear, sourced beverage-label context." />
-    <title>ClearSip — know what you drink</title>
+    <title>ClearSip — label clarity for every sip</title>
   </head>
   <body>
-    <main class="shell">
-      <header class="hero">
-        <a class="brand" href="#top" aria-label="ClearSip home"><span>◒</span> ClearSip</a>
-        <p class="eyebrow">BEVERAGE LABEL CLARITY</p>
-        <h1>Know more than<br /><em>“zero sugar.”</em></h1>
-        <p class="lede">Scan a label, say a drink name, or search it. ClearSip turns an ingredient list into sourced, plain-language context.</p>
-      </header>
+    <main>
+      <section class="hero" id="top">
+        <nav class="nav shell" aria-label="Main navigation">
+          <a class="brand" href="#top" aria-label="ClearSip home"><span class="brand-mark">C</span> ClearSip</a>
+          <div class="nav-links" aria-label="Page sections"><a href="#how-it-works">How it works</a><a href="#catalog">Our data</a></div>
+          <a class="nav-cta" href="#lookup">Check a drink <span aria-hidden="true">↗</span></a>
+        </nav>
 
-      <section class="entry-card" aria-labelledby="lookup-heading">
-        <div class="entry-header">
-          <div>
-            <p class="eyebrow">START HERE</p>
-            <h2 id="lookup-heading">What are you drinking?</h2>
+        <div class="hero-grid shell">
+          <header class="hero-copy">
+            <p class="eyebrow light">LABEL INTELLIGENCE, NOT FEAR</p>
+            <h1>Know what’s in<br /><em>your next sip.</em></h1>
+            <p class="hero-lede">Search a drink or scan its label. ClearSip turns hard-to-read ingredients into clear facts, practical context, and sources you can check.</p>
+            <div class="trust-row"><span>✦ Sourced context</span><span>◌ Your scan stays on device</span></div>
+          </header>
+
+          <aside class="hero-preview" aria-label="Example label summary">
+            <div class="preview-top"><span class="mini-logo">C</span><span>EXAMPLE SUMMARY</span><span class="preview-status">REVIEWED</span></div>
+            <div class="can-art" aria-hidden="true"><span>ZERO</span><b>LABEL<br />CHECK</b><i>✦</i></div>
+            <div class="preview-facts"><div><small>ADDED SUGAR</small><strong>0<em>g</em></strong></div><div><small>CAFFEINE</small><strong>160<em>mg</em></strong></div><div><small>INGREDIENTS</small><strong>9<em>+</em></strong></div></div>
+            <p>One front-of-pack claim is only part of the story.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="lookup-shell shell" id="lookup" aria-labelledby="lookup-heading">
+        <div class="lookup-card">
+          <div class="lookup-intro"><p class="eyebrow">START A LABEL CHECK</p><h2 id="lookup-heading">What are you drinking?</h2><p>Use a name, label image, video, or your voice.</p></div>
+          <div class="lookup-tools">
+            <form id="search-form" class="search-form">
+              <label class="sr-only" for="drink-query">Drink name</label>
+              <input id="drink-query" name="drink-query" autocomplete="off" placeholder="Search a drink, brand, or flavor" />
+              <button type="submit">Check label <span aria-hidden="true">→</span></button>
+            </form>
+            <div class="quick-search" aria-label="Example searches"><button type="button" data-drink="Coca-Cola Zero Sugar">Coca-Cola Zero Sugar</button><button type="button" data-drink="Monster Energy Zero Sugar">Monster Zero Sugar</button></div>
+            <div class="scan-options" aria-label="Other ways to identify a beverage">
+              <label class="scan-option"><input id="image-input" type="file" accept="image/*" /><span class="scan-icon">▧</span><span><b>Scan a label</b><small>Photo or screenshot</small></span><i>→</i></label>
+              <label class="scan-option"><input id="video-input" type="file" accept="video/*" /><span class="scan-icon">▷</span><span><b>Use a video</b><small>We read a clear frame</small></span><i>→</i></label>
+              <button id="voice-button" class="scan-option" type="button"><span class="scan-icon">◉</span><span><b>Say its name</b><small>Browser voice search</small></span><i>→</i></button>
+            </div>
+            <p id="scan-status" class="scan-status" aria-live="polite"></p>
           </div>
-          <span class="status-dot">US beta dataset</span>
         </div>
-        <form id="search-form" class="search-form">
-          <label class="sr-only" for="drink-query">Drink name</label>
-          <input id="drink-query" name="drink-query" autocomplete="off" placeholder="e.g. Coke Zero Sugar or Monster Zero Sugar" />
-          <button type="submit">Check drink <span aria-hidden="true">→</span></button>
-        </form>
-        <div class="modes" aria-label="Other ways to identify a beverage">
-          <label class="mode-control"><input id="image-input" type="file" accept="image/*" /><span class="mode-icon">⌁</span> Scan image</label>
-          <label class="mode-control"><input id="video-input" type="file" accept="video/*" /><span class="mode-icon">▷</span> Scan video</label>
-          <button id="voice-button" class="mode-control" type="button"><span class="mode-icon">◉</span> Say its name</button>
-        </div>
-        <p id="scan-status" class="scan-status" aria-live="polite"></p>
       </section>
 
-      <section id="empty-state" class="empty-state">
-        <div class="empty-symbol">✦</div>
-        <div><h2>Clarity, without fearmongering.</h2><p>Ingredients are not simply “good” or “bad.” Their effects can depend on dose, health history, medications, and the rest of your diet. ClearSip shows what’s known, what to watch, and where the information comes from.</p></div>
+      <section class="catalog-band" id="catalog">
+        <div class="shell catalog-grid"><div><p class="eyebrow">OPEN ABOUT OUR COVERAGE</p><h2>Every result carries its source and status.</h2></div><div class="catalog-stat"><strong>2</strong><span>reviewed package labels</span></div><div class="catalog-stat"><strong>29</strong><span>US drink discoveries in review</span></div><p class="catalog-note">We never fill in a missing recipe. A drink is only “reviewed” after a package-level label or official source is attached.</p></div>
       </section>
 
-      <section id="result" class="result hidden" aria-live="polite"></section>
+      <section id="empty-state" class="empty-state shell">
+        <div class="empty-badge">01</div><div><p class="eyebrow">MAKE THE FIRST MOVE</p><h2>Start with the can, bottle, or name in front of you.</h2><p>ClearSip separates label facts from general health context so that “zero sugar” doesn’t turn into a guess about everything else.</p></div><div class="empty-arrow" aria-hidden="true">↗</div>
+      </section>
 
-      <section class="principles" aria-label="ClearSip principles">
-        <article><span>01</span><h2>Evidence first</h2><p>Every assessment links to its source. We separate established guidance from emerging or uncertain evidence.</p></article>
-        <article><span>02</span><h2>Context matters</h2><p>Serving size, total daily intake, and individual health needs change the answer.</p></article>
-        <article><span>03</span><h2>Labels evolve</h2><p>We retain a source date and formulation region. Always compare this result with the package in your hand.</p></article>
+      <section id="result" class="result shell hidden" aria-live="polite"></section>
+
+      <section class="how-it-works shell" id="how-it-works" aria-labelledby="how-heading">
+        <div class="section-heading"><p class="eyebrow">THE CLEARSIP STANDARD</p><h2 id="how-heading">A label deserves more than a red or green score.</h2></div>
+        <div class="principles">
+          <article><span>01</span><h3>Read the package</h3><p>We identify the product, market, size, and label version—because those details can change the answer.</p></article>
+          <article><span>02</span><h3>Explain, don’t alarm</h3><p>Ingredients are categorized by function and evidence. Unknown quantities stay clearly marked as unknown.</p></article>
+          <article><span>03</span><h3>Show the work</h3><p>Sources and review status travel with each product, so you can decide what you trust.</p></article>
+        </div>
       </section>
     </main>
-    <footer>ClearSip is educational, not medical advice. Speak with a qualified clinician about personal dietary needs.</footer>
+    <footer><div class="shell footer-row"><span class="brand"><span class="brand-mark">C</span> ClearSip</span><p>Educational label information, not medical advice. Check your package for the current US label.</p></div></footer>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
