@@ -86,19 +86,27 @@ def search_products(query: str = Query(min_length=2, max_length=120)) -> list[di
 
 
 @app.get("/api/catalog-discoveries")
-def catalog_discoveries(limit: int = Query(default=100, ge=1, le=500)) -> list[dict]:
+def catalog_discoveries(
+    limit: int = Query(default=100, ge=1, le=500),
+    query: str | None = None,
+) -> list[dict]:
     """Source-backed public product candidates awaiting exact package-label review."""
     marker = placeholder()
+    terms = re.findall(r"[a-z0-9]+", query.lower())[:12] if query else []
+    searchable_name = "LOWER(manufacturer_name || ' ' || beverage_family_name || ' ' || variant_name)"
+    term_filters = " AND ".join(f"{searchable_name} LIKE {marker}" for _ in terms)
+    where = f"WHERE {term_filters}" if term_filters else ""
     statement = f"""
         SELECT id, manufacturer_name, beverage_family_name, variant_name, category, market,
                observed_package_sizes, package_size_scope, availability_note, source_url,
                discovered_on, verification_status
         FROM catalog_discoveries
+        {where}
         ORDER BY manufacturer_name, beverage_family_name, variant_name
         LIMIT {marker}
     """
     with connection() as conn:
-        records = conn.execute(statement, (limit,)).fetchall()
+        records = conn.execute(statement, (*[f"%{term}%" for term in terms], limit)).fetchall()
     return [dict(record) for record in records]
 
 

@@ -23,6 +23,8 @@ assert "40% of FDA" in monster["label_context"]["frequent_intake_context"]
 assert len(search_products("Coca")) == 1
 assert search_products("Monster Zero Sugar")[0]["display_name"] == "Monster Energy Zero Sugar"
 assert len(catalog_discoveries(limit=100)) == 29
+assert len(catalog_discoveries(query="Pepsi", limit=100)) == 8
+assert catalog_discoveries(query="Pepsi Zero", limit=100)[0]["variant_name"] == "Pepsi Zero Sugar"
 assert catalog_summary() == {"reviewed_package_labels": 2, "catalog_discoveries": 29}
 
 print("API smoke tests passed")

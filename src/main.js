@@ -1,6 +1,6 @@
 import { createWorker } from "tesseract.js";
 import { dataVersion, findDrink } from "./data.js";
-import { findCatalogProduct, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
+import { findCatalogDiscovery, findCatalogProduct, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import "./style.css";
 
@@ -37,6 +37,17 @@ function showResult(drink, matchedFrom = "typed search") {
   result.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function showDiscoveryResult(drink, matchedFrom = "typed search") {
+  emptyState.classList.add("hidden");
+  result.classList.remove("hidden");
+  const packageSizes = drink.observed_package_sizes || "No package-size evidence has been recorded yet.";
+  const status = drink.verification_status === "needs_package_verification" ? "Needs package-label verification" : "Source-backed discovery candidate";
+  result.innerHTML = `
+    <div class="result-heading"><div><p class="eyebrow">MATCHED FROM ${escapeHtml(matchedFrom).toUpperCase()}</p><h2>${escapeHtml(drink.variant_name)}</h2><p>${escapeHtml(drink.market)} · ${escapeHtml(drink.category)}</p></div><span class="verified">DISCOVERY RECORD</span></div>
+    <section class="discovery-result-card"><p class="eyebrow">WHAT WE CAN CONFIRM</p><h3>This product is in the source-backed discovery catalog, but an exact package label has not been reviewed yet.</h3><dl><div><dt>Manufacturer</dt><dd>${escapeHtml(drink.manufacturer_name)}</dd></div><div><dt>Available size evidence</dt><dd>${escapeHtml(packageSizes)}</dd></div><div><dt>Review status</dt><dd>${escapeHtml(status)}</dd></div></dl><p>ClearSip intentionally does not guess ingredients, nutrition facts, or health context until a specific US package label is attached.</p><a href="${escapeHtml(safeExternalUrl(drink.source_url))}" target="_blank" rel="noreferrer">Check the public source ↗</a></section>`;
+  result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 async function handleQuery(raw, origin = "typed search") {
   let drink = null;
   try {
@@ -49,12 +60,23 @@ async function handleQuery(raw, origin = "typed search") {
     scanStatus.textContent = "";
     showResult(drink, origin);
     return true;
-  } else {
-    result.classList.add("hidden");
-    emptyState.classList.remove("hidden");
-    emptyState.innerHTML = `<div class="empty-badge">?</div><div><p class="eyebrow">NOT IN THE REVIEWED SET YET</p><h2>We couldn’t make a confident match.</h2><p>Try the brand and full drink name. We’d rather show no result than guess from an incomplete label match.</p></div><div class="empty-arrow" aria-hidden="true">↗</div>`;
-    return false;
   }
+
+  try {
+    const discovery = await findCatalogDiscovery(raw);
+    if (discovery) {
+      scanStatus.textContent = "A sourced discovery record was found; package-label facts are still under review.";
+      showDiscoveryResult(discovery, origin);
+      return true;
+    }
+  } catch (error) {
+    console.warn("Catalog discovery lookup is unavailable.", error);
+  }
+
+  result.classList.add("hidden");
+  emptyState.classList.remove("hidden");
+  emptyState.innerHTML = `<div class="empty-badge">?</div><div><p class="eyebrow">NOT IN THE REVIEWED SET YET</p><h2>We couldn’t make a confident match.</h2><p>Try the brand and full drink name. We’d rather show no result than guess from an incomplete label match.</p></div><div class="empty-arrow" aria-hidden="true">↗</div>`;
+  return false;
 }
 
 async function loadCatalogSummary() {

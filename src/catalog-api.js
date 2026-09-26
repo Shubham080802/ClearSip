@@ -86,8 +86,20 @@ export function getCatalogSummary(fetchFn = fetch) {
   return fetchJson("/catalog-summary", fetchFn);
 }
 
-export function getCatalogDiscoveries(fetchFn = fetch) {
-  return fetchJson("/catalog-discoveries?limit=100", fetchFn);
+export function getCatalogDiscoveries(query = "", fetchFn = fetch) {
+  const filter = query.trim().slice(0, 120);
+  return fetchJson(`/catalog-discoveries?limit=100${filter ? `&query=${encodeURIComponent(filter)}` : ""}`, fetchFn);
+}
+
+export async function findCatalogDiscovery(query, fetchFn = fetch) {
+  const trimmed = query.trim().slice(0, 120);
+  if (normalizeName(trimmed).length < 2) return null;
+  const matches = await getCatalogDiscoveries(trimmed, fetchFn);
+  const normalizedQuery = normalizeName(trimmed);
+  return matches.find((match) => normalizeName(match.variant_name) === normalizedQuery)
+    || matches.find((match) => normalizeName(match.variant_name).includes(normalizedQuery))
+    || matches[0]
+    || null;
 }
 
 export async function findCatalogProduct(query, fetchFn = fetch) {
