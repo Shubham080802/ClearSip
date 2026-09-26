@@ -6,10 +6,11 @@ compliance, or make an individual health recommendation.
 
 from __future__ import annotations
 
-import sqlite3
 import re
+import sqlite3
 from datetime import date
 from pathlib import Path
+from typing import Any
 
 POLICY_VERSION = "2026.09-us-label-context-v1"
 SUGAR_INGREDIENT_PATTERN = re.compile(r"\b(?:sugar|syrup|honey|glucose|fructose|sucrose)\b", re.IGNORECASE)
@@ -102,16 +103,38 @@ def assessment_for(label: dict) -> tuple[str, str, str, str, str, str]:
     return overall, sugar_free, preservative_free, healthy, " ".join(contexts), summary
 
 
-def refresh_assessments(database: Path) -> None:
-    with sqlite3.connect(database) as conn:
-        conn.row_factory = sqlite3.Row
-        labels = conn.execute("SELECT * FROM label_versions WHERE is_current = 1").fetchall()
-        for row in labels:
-            overall, sugar_free, preservative_free, healthy, context, summary = assessment_for(dict(row))
-            conn.execute(
-                """INSERT OR REPLACE INTO label_assessments
-                (label_version_id, overall_status, sugar_free_claim_status, preservative_free_claim_status,
-                 healthy_claim_status, frequent_intake_context, summary, policy_version, assessed_on)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (row["id"], overall, sugar_free, preservative_free, healthy, context, summary, POLICY_VERSION, date.today().isoformat()),
-            )
+def _refresh_assessments(conn: Any, marker: str) -> None:
+    labels = conn.execute("SELECT * FROM label_versions WHERE is_current = 1").fetchall()
+    statement = f"""
+        INSERT INTO label_assessments
+        (label_version_id, overall_status, sugar_free_claim_status, preservative_free_claim_status,
+         healthy_claim_status, frequent_intake_context, summary, policy_version, assessed_on)
+        VALUES ({", ".join([marker] * 9)})
+        ON CONFLICT (label_version_id) DO UPDATE SET
+          overall_status = excluded.overall_status,
+          sugar_free_claim_status = excluded.sugar_free_claim_status,
+          preservative_free_claim_status = excluded.preservative_free_claim_status,
+          healthy_claim_status = excluded.healthy_claim_status,
+          frequent_intake_context = excluded.frequent_intake_context,
+          summary = excluded.summary,
+          policy_version = excluded.policy_version,
+          assessed_on = excluded.assessed_on
+    """
+    for row in labels:
+        overall, sugar_free, preservative_free, healthy, context, summary = assessment_for(dict(row))
+        conn.execute(
+            statement,
+            (row["id"], overall, sugar_free, preservative_free, healthy, context, summary, POLICY_VERSION, date.today().isoformat()),
+        )
+
+
+def refresh_assessments(database_or_connection: Path | Any) -> None:
+    """Refresh assessments for a SQLite path or an open SQLite/PostgreSQL connection."""
+    if isinstance(database_or_connection, Path):
+        with sqlite3.connect(database_or_connection) as conn:
+            conn.row_factory = sqlite3.Row
+            _refresh_assessments(conn, "?")
+        return
+
+    marker = "?" if isinstance(database_or_connection, sqlite3.Connection) else "%s"
+    _refresh_assessments(database_or_connection, marker)

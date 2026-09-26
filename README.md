@@ -83,6 +83,20 @@ marks records `catalog_label_match`; it never turns an FDC search hit into a
 package-verified label. Use the offline FDC Branded Foods release in a worker
 for a nationwide backfill, not a Vercel request.
 
+### Controlled cloud catalog refresh
+
+The **Refresh FoodData Central catalog** GitHub Action is intentionally manual.
+Before its first run, add these GitHub repository secrets in the browser:
+
+- `CLEARSIP_DATABASE_URL`: the managed production PostgreSQL connection URL.
+- `FDC_API_KEY`: a Data.gov API key for FoodData Central.
+
+Then select **Actions → Refresh FoodData Central catalog → Run workflow** and
+enter one focused brand or beverage query. The job applies immutable migrations
+first, imports at most 50 FDC Branded Foods search hits, and recalculates the
+label-only assessments. It does not upload user scans, claim package
+verification, or perform a nationwide backfill.
+
 ## Chrome-first and Vercel workflow
 
 Chrome can be your primary working surface: use GitHub's web editor (`github.dev`) for simple source changes, the Vercel dashboard for deployments and environment variables, and Vercel preview URLs to test each pushed commit. The Git repository remains the authoritative source, so browser-made edits should still be committed to GitHub.

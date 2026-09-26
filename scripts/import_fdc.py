@@ -12,7 +12,6 @@ import hashlib
 import json
 import os
 import re
-import sqlite3
 import ssl
 import sys
 import urllib.parse
@@ -24,6 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from api.classification import refresh_assessments
+from api.database import connection, placeholder
+from scripts.migrate_db import apply_migrations
 
 API_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
 TODAY = date.today().isoformat()
@@ -85,7 +86,19 @@ def fetch_foods(api_key: str, query: str, page_size: int) -> list[dict]:
         return json.load(response).get("foods", [])
 
 
-def import_food(conn: sqlite3.Connection, food: dict) -> bool:
+def upsert(conn, table: str, columns: tuple[str, ...], values: tuple, conflict_columns: tuple[str, ...], update_columns: tuple[str, ...] = ()) -> None:
+    """Run the same safe upsert against SQLite or PostgreSQL."""
+    marker = placeholder()
+    assignments = ", ".join(f"{column} = excluded.{column}" for column in update_columns)
+    conflict = f"DO UPDATE SET {assignments}" if assignments else "DO NOTHING"
+    conn.execute(
+        f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join([marker] * len(columns))}) "
+        f"ON CONFLICT ({', '.join(conflict_columns)}) {conflict}",
+        values,
+    )
+
+
+def import_food(conn, food: dict) -> bool:
     fdc_id = str(food.get("fdcId") or "")
     description = (food.get("description") or "").strip()
     if not fdc_id or not description:
@@ -108,24 +121,56 @@ def import_food(conn: sqlite3.Connection, food: dict) -> bool:
     label_id = f"fdc-label-{fdc_id}-{label_hash[:12]}"
     package_description = food.get("householdServingFullText") or f"{food.get('servingSize') or 'unknown'} {food.get('servingSizeUnit') or ''}".strip()
 
-    conn.execute("INSERT OR IGNORE INTO manufacturers VALUES (?, ?, ?)", (manufacturer_id, manufacturer, None))
-    conn.execute("INSERT OR IGNORE INTO beverage_families VALUES (?, ?, ?)", (family_id, manufacturer_id, brand))
-    conn.execute("INSERT OR REPLACE INTO beverage_variants VALUES (?, ?, ?, ?, ?)", (variant_id, family_id, description, None, food.get("foodCategory") or "branded beverage"))
+    upsert(conn, "manufacturers", ("id", "name", "website_url"), (manufacturer_id, manufacturer, None), ("id",))
+    upsert(conn, "beverage_families", ("id", "manufacturer_id", "name"), (family_id, manufacturer_id, brand), ("id",))
+    upsert(
+        conn,
+        "beverage_variants",
+        ("id", "family_id", "display_name", "flavor_name", "category"),
+        (variant_id, family_id, description, None, food.get("foodCategory") or "branded beverage"),
+        ("id",),
+        ("family_id", "display_name", "flavor_name", "category"),
+    )
     # FDC's ID is always retained; GTIN is nullable because some records omit it.
-    conn.execute("INSERT OR REPLACE INTO product_packages VALUES (?, ?, ?, ?, ?, ?, ?)", (package_id, variant_id, gtin, fdc_id, "United States", package_description, "unknown"))
-    conn.execute("INSERT OR REPLACE INTO source_records VALUES (?, ?, ?, ?, ?, ?, ?)", (source_id, "USDA FoodData Central", f"https://fdc.nal.usda.gov/food-details/{fdc_id}/nutrients", "United States", TODAY, "usda_fdc_branded", label_hash))
+    upsert(
+        conn,
+        "product_packages",
+        ("id", "variant_id", "gtin", "fdc_id", "market", "package_description", "lifecycle_status"),
+        (package_id, variant_id, gtin, fdc_id, "United States", package_description, "unknown"),
+        ("id",),
+        ("variant_id", "gtin", "fdc_id", "market", "package_description", "lifecycle_status"),
+    )
+    upsert(
+        conn,
+        "source_records",
+        ("id", "publisher", "url", "market", "accessed_on", "source_type", "content_hash"),
+        (source_id, "USDA FoodData Central", f"https://fdc.nal.usda.gov/food-details/{fdc_id}/nutrients", "United States", TODAY, "usda_fdc_branded", label_hash),
+        ("id",),
+    )
 
-    current = conn.execute("SELECT id FROM label_versions WHERE package_id = ? AND is_current = 1", (package_id,)).fetchone()
-    if current and current[0] != label_id:
-        conn.execute("UPDATE label_versions SET is_current = 0 WHERE id = ?", (current[0],))
-    conn.execute(
-        "INSERT OR REPLACE INTO label_versions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    marker = placeholder()
+    current = conn.execute(f"SELECT id FROM label_versions WHERE package_id = {marker} AND is_current = 1", (package_id,)).fetchone()
+    if current and current["id"] != label_id:
+        conn.execute(f"UPDATE label_versions SET is_current = 0 WHERE id = {marker}", (current["id"],))
+    upsert(
+        conn,
+        "label_versions",
+        ("id", "package_id", "source_id", "serving", "servings_per_container", "calories", "saturated_fat_g", "total_sugar_g", "added_sugar_g", "sodium_mg", "caffeine_mg", "ingredient_statement", "contains_statement", "front_label_claims", "verification_status", "label_observed_on", "is_current"),
         (label_id, package_id, source_id, package_description, None, nutrient(food, "calories"), nutrient(food, "saturatedFat"), nutrient(food, "sugars"), nutrient(food, "addedSugar"), nutrient(food, "sodium"), None, ingredients or None, None, None, "catalog_label_match", food.get("modifiedDate") or food.get("publishedDate") or TODAY, 1),
+        ("id",),
+        ("package_id", "source_id", "serving", "servings_per_container", "calories", "saturated_fat_g", "total_sugar_g", "added_sugar_g", "sodium_mg", "caffeine_mg", "ingredient_statement", "contains_statement", "front_label_claims", "verification_status", "label_observed_on", "is_current"),
     )
     for position, token in enumerate(split_ingredients(ingredients), start=1):
         ingredient_id = f"ingredient-{slug(token)}"
-        conn.execute("INSERT OR IGNORE INTO ingredients VALUES (?, ?)", (ingredient_id, token))
-        conn.execute("INSERT OR REPLACE INTO label_ingredients VALUES (?, ?, ?, ?, ?, ?, ?)", (label_id, ingredient_id, position, "Declared ingredient", "Declared on the source label. Amount and product-specific effect are not disclosed.", "label_context", None))
+        upsert(conn, "ingredients", ("id", "name"), (ingredient_id, token), ("id",))
+        upsert(
+            conn,
+            "label_ingredients",
+            ("label_version_id", "ingredient_id", "position", "role", "assessment", "evidence_status", "source_url"),
+            (label_id, ingredient_id, position, "Declared ingredient", "Declared on the source label. Amount and product-specific effect are not disclosed.", "label_context", None),
+            ("label_version_id", "ingredient_id"),
+            ("position", "role", "assessment", "evidence_status", "source_url"),
+        )
     return True
 
 
@@ -136,13 +181,19 @@ def main() -> None:
     parser.add_argument("--api-key", default=os.getenv("FDC_API_KEY"))
     parser.add_argument("--demo", action="store_true", help="Use FDC's low-rate DEMO_KEY for a small exploration only.")
     parser.add_argument("--database", type=Path, default=ROOT / "data" / "clearsip.db")
+    parser.add_argument("--database-url", help="Use a managed PostgreSQL or SQLite URL instead of the local default.")
     args = parser.parse_args()
     api_key = "DEMO_KEY" if args.demo else args.api_key
     if not api_key:
         raise SystemExit("Set FDC_API_KEY or use --demo only for a small exploration. Never commit the key.")
-    with sqlite3.connect(args.database) as conn:
+    if args.database_url:
+        os.environ["DATABASE_URL"] = args.database_url
+    elif args.database != ROOT / "data" / "clearsip.db":
+        os.environ["DATABASE_URL"] = f"sqlite:///{args.database}"
+    apply_migrations()
+    with connection() as conn:
         imported = sum(import_food(conn, food) for food in fetch_foods(api_key, args.query, args.page_size))
-    refresh_assessments(args.database)
+        refresh_assessments(conn)
     print(f"Imported {imported} FDC Branded Foods records as catalog_label_match.")
 
 

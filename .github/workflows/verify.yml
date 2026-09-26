@@ -25,5 +25,6 @@ jobs:
           python-version: "3.14"
       - run: python -m pip install -r requirements.txt
       - run: python tests/api_smoke.py
+      - run: python tests/import_fdc_smoke.py
       - run: python scripts/migrate_db.py --database-url "sqlite:///${{ runner.temp }}/clearsip-migration-test.db"
       - run: python scripts/migrate_db.py --database-url "sqlite:///${{ runner.temp }}/clearsip-migration-test.db"
