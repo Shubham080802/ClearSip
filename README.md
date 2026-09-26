@@ -103,6 +103,11 @@ Chrome can be your primary working surface: use GitHub's web editor (`github.dev
 
 ClearSip is deployed from GitHub to Vercel. Its Vite frontend and FastAPI entrypoint are routed in [`vercel.json`](vercel.json), so `/api/*` reaches the Python function while every other path loads the browser app. Add a managed PostgreSQL integration (for example, Neon) and set its injected `DATABASE_URL`; do not use the local SQLite database in production.
 
+The same configuration sends a restrictive Content Security Policy, blocks framing,
+and disables unneeded browser permissions. The policy permits only the application
+origin plus the Tesseract.js jsDelivr resources needed for browser-only OCR; the
+microphone remains available only for the voluntary voice-search feature.
+
 ## Data safety and provenance
 
 The seed dataset is intentionally small. See [the research note](docs/research/seed-data-sources.md) before adding records. In particular:
