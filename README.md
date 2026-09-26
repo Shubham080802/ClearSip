@@ -136,12 +136,12 @@ The local development dataset now has two **package-label records** with ingredi
 
 See [the initial portfolio list](docs/research/initial-us-beverage-portfolio.md) for the beverage families, flavors, package-size evidence, and verification status.
 
-## Recommended next steps
+## Remaining work requiring external authority
 
-1. Add a result-selection step when a search returns multiple packages, then add barcode lookup for exact package-size matching.
-2. Build the external FoodData Central ETL worker and PostgreSQL migration, beginning with current US branded beverage records.
-3. Add auth, consent, retention controls, and a moderation/review workflow before retaining any uploads.
-4. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before public release.
+1. Add `CLEARSIP_DATABASE_URL` and `FDC_API_KEY` as GitHub repository secrets, then use the manual FDC refresh workflow for focused imports. A lawful nationwide backfill requires a separate, reviewable worker and source-release process.
+2. Choose an authentication/reviewer model before adding production write endpoints for discovery → package-reviewed → published states.
+3. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before broad public release.
+4. Choose a support contact channel before adding label-mismatch reporting.
 5. Add food products only after the beverage source/provenance workflow is stable.
 
 ## Scope statement

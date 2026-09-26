@@ -1,12 +1,12 @@
 # ClearSip project handoff
 
-**Last updated:** 2026-09-25
+**Last updated:** 2026-09-26
 **Repository:** `Shubham080802/ClearSip` (public; `main` is pushed)
 **Local path:** `/Users/shubhamkumar/Documents/GITHUB Projects/ClearSip`
 
 ## Current state
 
-The Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, and browser speech recognition. The browser now queries the FastAPI/SQL catalog through Vite's local `/api` proxy, with a reviewed static fallback only if the API is unavailable. There are two detailed US package-label seed products and 29 source-backed catalog discoveries awaiting exact label verification.
+The Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, browser speech recognition, source-backed discovery lookup, and exact typed GTIN/UPC lookup. The browser queries the FastAPI/SQL catalog through Vite's local `/api` proxy, with a reviewed static fallback only if the API is unavailable. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. There are two detailed US package-label seed products and 29 source-backed catalog discoveries awaiting exact label verification.
 
 ## Important implementation choices
 
@@ -20,6 +20,8 @@ The Vite MVP builds with `npm run build`; it supports text, image OCR, selected-
 - Voice recognition relies on `SpeechRecognition`/`webkitSpeechRecognition`, which is browser-dependent.
 - Video scanning extracts one central/early frame. It is a useful MVP, not a guarantee that every frame is read.
 - Monster’s full ingredient panel is marked provisional in the dataset because only core facts came from the manufacturer product page. Verify with an in-hand label or a manufacturer label source before public release.
+- `src/scan-guardrails.js` rejects unsupported, empty, and oversized media before browser OCR. `vercel.json` also contains the deployed content-security and browser-permissions policy.
+- `.github/workflows/refresh-fdc.yml` is a manual, controlled FoodData Central importer for PostgreSQL or SQLite. It must not run until `CLEARSIP_DATABASE_URL` and `FDC_API_KEY` are configured as GitHub repository secrets.
 
 ## Non-negotiable guardrails
 
@@ -29,9 +31,12 @@ The Vite MVP builds with `npm run build`; it supports text, image OCR, selected-
 - Never compute sweetener ADI percentages without a disclosed sweetener amount.
 - Record market, package size, source URL, accessed date, verification state, and label version for every future item.
 
-## Next recommended task
+## Remaining work requiring external authority
 
-Provision production PostgreSQL, apply `scripts/migrate_db.py` through a protected deployment workflow, then build a separate FoodData Central ETL worker into it. The worker must retain FDC ID, source release, fetch time, source hash, package/GTIN, market, label version, and verification state. Do not run nationwide import inside Vercel Functions or collect/retain consumer uploads without explicit consent and documented retention/deletion controls.
+1. Add `CLEARSIP_DATABASE_URL` and `FDC_API_KEY` in GitHub, then run the manual FDC workflow with focused queries. A nationwide import requires a dedicated, reviewed external worker—not a Vercel Function.
+2. Choose an authentication/reviewer model before implementing write APIs for discovery → reviewed → published states. Do not expose production write endpoints without it.
+3. Obtain qualified nutrition, clinical, and regulatory review of consumer-facing assessment language before a broad public health launch.
+4. Choose a support/contact channel before adding label-mismatch reporting; do not invent or publish a personal email address.
 
 ## Usage-limit continuation instruction
 

@@ -1,16 +1,17 @@
 # ClearSip roadmap
 
-## Now — make the existing product real
+## Completed — make the existing product real
 
-1. **Connect the UI to FastAPI.** Replace `src/data.js` lookup with `GET /api/products` and `GET /api/products/{packageId}`. Display the source, package size, market, review date, and verification status from SQL.
-2. **Show catalog discovery honestly.** Add a browse/search screen for the 29 source-backed candidates. A candidate must show “label not yet reviewed” and never borrow ingredients from another size or flavor.
-3. **Deploy a preview.** Import the public GitHub repository into Vercel, add a managed PostgreSQL provider, set `DATABASE_URL`, and create separate preview/production environments.
-4. **Add automated checks.** Test API search, product detail, source/verification labels, and the no-match state in CI.
+1. **FastAPI catalog lookup.** The UI reads versioned package records from `/api`, displays source/package/review information, and retains a small local fallback only when the API is unavailable.
+2. **Honest discovery coverage.** Users can browse and search the 29 source-backed candidates. Discovery results deliberately withhold ingredient and health panels until a package label is reviewed.
+3. **Public Vercel deployment.** The public GitHub repository deploys to Vercel with a managed PostgreSQL database, immutable schema migrations, and production-safe static/API routing.
+4. **Automated checks.** Client, API, migration, and FDC-import smoke checks run in CI.
+5. **Input and browser safeguards.** OCR stays in the browser; image/video sizes are bounded, content security headers are active, and only required browser permissions remain available.
 
 ## Next — expand the catalog safely
 
-1. **Build an FDC import worker outside Vercel Functions.** Import USDA FoodData Central Branded Foods data into PostgreSQL, retain source release/FDC ID/source hash, and run monthly updates.
-2. **Barcode-first matching.** Use a barcode to resolve an exact GTIN/package before falling back to name/OCR search. Queue unknown codes for review.
+1. **Run the controlled FDC refresh.** The manual GitHub Action and PostgreSQL-compatible importer are ready. Add `CLEARSIP_DATABASE_URL` and `FDC_API_KEY` repository secrets, then import focused reviewable batches. A nationwide backfill still requires a dedicated worker and source-release process outside Vercel.
+2. **Barcode-first matching.** Done for typed UPC/EAN/GTIN values: an exact catalog code resolves its specific package before name/OCR matching. Camera barcode scanning and unknown-code review remain future work.
 3. **Review workflow.** Add staff-only approval states: discovery candidate → package label reviewed → published → superseded. Preserve prior label versions instead of overwriting them.
 4. **Ingredient profiles.** Expand the current reusable ingredient profiles with an editorial review process and primary-source citations.
 
