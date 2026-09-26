@@ -1,6 +1,7 @@
 import { createWorker } from "tesseract.js";
 import { dataVersion, findDrink } from "./data.js";
 import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
+import { resetCaptureButton, setCaptureProcessing } from "./camera-ui.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import "./style.css";
 import "./camera.css";
@@ -14,6 +15,7 @@ const cameraButton = document.querySelector("#camera-button");
 const cameraDialog = document.querySelector("#camera-dialog");
 const cameraPreview = document.querySelector("#camera-preview");
 const cameraCapture = document.querySelector("#camera-capture");
+const cameraStatus = document.querySelector("#camera-status");
 const cameraClose = document.querySelector("#camera-close");
 const cameraCancel = document.querySelector("#camera-cancel");
 const scanStatus = document.querySelector("#scan-status");
@@ -23,6 +25,7 @@ const reviewedCount = document.querySelector("#catalog-reviewed-count");
 const discoveryCount = document.querySelector("#catalog-discovery-count");
 const discoveryList = document.querySelector("#discovery-list");
 let cameraStream = null;
+const OCR_TIMEOUT_MS = 45_000;
 
 const statusLabels = { watch: "Worth watching", context: "Context matters", neutral: "Label context", unknown: "Not fully specified" };
 
@@ -145,12 +148,20 @@ document.querySelectorAll("[data-drink]").forEach((button) => {
   });
 });
 
+function withTimeout(promise, message) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = window.setTimeout(() => reject(new Error(message)), OCR_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timer));
+}
+
 async function ocrFile(file, origin) {
   scanStatus.textContent = `Reading ${origin}… this can take a moment.`;
+  let worker;
   try {
-    const worker = await createWorker("eng");
-    const { data } = await worker.recognize(file);
-    await worker.terminate();
+    worker = await withTimeout(createWorker("eng"), "The label reader took too long to start. Check your connection and try again.");
+    const { data } = await withTimeout(worker.recognize(file), "The label reader took too long. Try a closer, well-lit label photo.");
     const recognized = data.text.replace(/\s+/g, " ").trim();
     query.value = recognized;
     const matched = await handleQuery(recognized, origin);
@@ -160,9 +171,13 @@ async function ocrFile(file, origin) {
       scanStatus.textContent = "I read the label, but couldn’t confidently match it to the beta dataset. Edit the search field with the brand and product name.";
       query.focus();
     }
+    return matched;
   } catch (error) {
     console.error(error);
-    scanStatus.textContent = "The label could not be read. Try a well-lit, front-facing photo or search by name.";
+    scanStatus.textContent = error.message || "The label could not be read. Try a well-lit, front-facing photo or search by name.";
+    return false;
+  } finally {
+    await worker?.terminate().catch((error) => console.warn("Could not stop the label reader.", error));
   }
 }
 
@@ -179,6 +194,8 @@ async function openCamera() {
     return;
   }
 
+  resetCaptureButton(cameraCapture);
+  cameraStatus.textContent = "Starting camera…";
   cameraButton.disabled = true;
   scanStatus.textContent = "Opening your camera…";
   try {
@@ -189,6 +206,7 @@ async function openCamera() {
     cameraPreview.srcObject = cameraStream;
     cameraDialog.showModal();
     await cameraPreview.play();
+    cameraStatus.textContent = "Ready to capture the front label.";
     scanStatus.textContent = "";
   } catch (error) {
     console.error(error);
@@ -205,25 +223,33 @@ async function captureCameraFrame() {
     return;
   }
 
-  cameraCapture.disabled = true;
+  setCaptureProcessing(cameraCapture);
+  cameraStatus.textContent = "Reading the label. This can take up to 45 seconds.";
   const canvas = document.createElement("canvas");
   const longestEdge = 1920;
   const scale = Math.min(1, longestEdge / Math.max(cameraPreview.videoWidth, cameraPreview.videoHeight));
   canvas.width = Math.round(cameraPreview.videoWidth * scale);
   canvas.height = Math.round(cameraPreview.videoHeight * scale);
-  canvas.getContext("2d").drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+  const context = canvas.getContext("2d");
+  if (!context) {
+    resetCaptureButton(cameraCapture);
+    cameraStatus.textContent = "This browser could not prepare the camera image. Try choosing a photo instead.";
+    return;
+  }
+  context.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
 
   try {
     const frame = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
     const problem = validateScanFile(frame, "image");
     if (problem) throw new Error(problem);
-    stopCamera();
     await ocrFile(frame, "camera label");
+    stopCamera();
   } catch (error) {
     console.error(error);
     scanStatus.textContent = error.message || "The camera image could not be captured. Try again or choose a photo.";
+    cameraStatus.textContent = "Capture failed. Try again with the label centered and well lit.";
   } finally {
-    cameraCapture.disabled = false;
+    resetCaptureButton(cameraCapture);
   }
 }
 
