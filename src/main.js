@@ -1,6 +1,6 @@
 import { createWorker } from "tesseract.js";
 import { dataVersion, findDrink } from "./data.js";
-import { findCatalogDiscovery, findCatalogProduct, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
+import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import "./style.css";
 
@@ -50,8 +50,17 @@ function showDiscoveryResult(drink, matchedFrom = "typed search") {
 
 async function handleQuery(raw, origin = "typed search") {
   let drink = null;
+  const gtin = raw.replace(/\D/g, "");
+  if ([8, 12, 13, 14].includes(gtin.length)) {
+    try {
+      drink = await findCatalogProductByGtin(gtin);
+      if (drink) origin = "exact barcode lookup";
+    } catch (error) {
+      console.warn("No exact package was found for this barcode.", error);
+    }
+  }
   try {
-    drink = await findCatalogProduct(raw);
+    drink ||= await findCatalogProduct(raw);
   } catch (error) {
     console.warn("Catalog API is unavailable; using the reviewed local seed only.", error);
   }

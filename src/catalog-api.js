@@ -102,6 +102,12 @@ export async function findCatalogDiscovery(query, fetchFn = fetch) {
     || null;
 }
 
+export async function findCatalogProductByGtin(gtin, fetchFn = fetch) {
+  const cleaned = gtin.replace(/\D/g, "");
+  if (![8, 12, 13, 14].includes(cleaned.length)) return null;
+  return toDisplayProduct(await fetchJson(`/products/by-gtin/${encodeURIComponent(cleaned)}`, fetchFn));
+}
+
 export async function findCatalogProduct(query, fetchFn = fetch) {
   const trimmed = query.trim().slice(0, 120);
   if (normalizeName(trimmed).length < 2) return null;

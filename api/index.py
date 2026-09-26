@@ -124,8 +124,8 @@ def catalog_summary() -> dict[str, int]:
     return dict(record)
 
 
-@app.get("/api/products/{package_id}")
-def product_detail(package_id: str) -> dict:
+def package_label_rows(column: str, value: str) -> list[dict]:
+    """Fetch all ingredient rows for one package, using an internal safe column name."""
     marker = placeholder()
     statement = f"""
         SELECT pp.id AS package_id, pp.market, pp.package_description, pp.gtin, pp.fdc_id,
@@ -150,11 +150,28 @@ def product_detail(package_id: str) -> dict:
         LEFT JOIN label_ingredients li ON li.label_version_id = lv.id
         LEFT JOIN ingredients i ON i.id = li.ingredient_id
         LEFT JOIN ingredient_profiles ip ON ip.ingredient_id = i.id
-        WHERE pp.id = {marker}
+        WHERE {column} = {marker}
         ORDER BY li.position
     """
     with connection() as conn:
-        records = [dict(row) for row in conn.execute(statement, (package_id,)).fetchall()]
+        return [dict(row) for row in conn.execute(statement, (value,)).fetchall()]
+
+
+@app.get("/api/products/by-gtin/{gtin}")
+def product_by_gtin(gtin: str) -> dict:
+    """Resolve an exact package by its UPC/EAN/GTIN when it is present in the catalog."""
+    cleaned = re.sub(r"\D", "", gtin)
+    if len(cleaned) not in (8, 12, 13, 14):
+        raise HTTPException(status_code=422, detail="GTIN must contain 8, 12, 13, or 14 digits")
+    records = package_label_rows("pp.gtin", cleaned)
+    if not records:
+        raise HTTPException(status_code=404, detail="Product package GTIN not found")
+    return rows_to_package(records)
+
+
+@app.get("/api/products/{package_id}")
+def product_detail(package_id: str) -> dict:
+    records = package_label_rows("pp.id", package_id)
     if not records:
         raise HTTPException(status_code=404, detail="Product package not found")
     return rows_to_package(records)

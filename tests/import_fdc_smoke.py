@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 from api.classification import refresh_assessments
 from api.database import connection
+from api.index import product_by_gtin
 from scripts.import_fdc import import_food
 from scripts.migrate_db import apply_migrations
 
@@ -43,11 +44,13 @@ with tempfile.TemporaryDirectory() as directory:
             WHERE label_version_id = (SELECT id FROM label_versions WHERE package_id = ?)""",
             ("fdc-987654",),
         ).fetchone()
+    barcode_match = product_by_gtin("012345678905")
 
 assert package["fdc_id"] == "987654"
 assert package["package_description"] == "12 fl oz can"
 assert label["verification_status"] == "catalog_label_match"
 assert label["is_current"] == 1
 assert assessment["overall_status"] == "caffeine_context"
+assert barcode_match["id"] == "fdc-987654"
 
 print("FDC importer smoke tests passed")
