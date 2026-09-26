@@ -6,7 +6,7 @@
 2. **Honest discovery coverage.** Users can browse and search 85 source-backed candidates across 23 categories, including a packaged-coffee starter batch and diverse juice, energy, water, sparkling-water, oat-beverage, and functional-soda records. Discovery results deliberately withhold ingredient and health panels until a package label is reviewed.
 3. **Public Vercel deployment.** The public GitHub repository deploys to Vercel with a managed PostgreSQL database, immutable schema migrations, and production-safe static/API routing.
 4. **Automated checks.** Client, API, migration, and FDC-import smoke checks run in CI.
-5. **Input and browser safeguards.** OCR stays in the browser; image/video sizes are bounded, content security headers are active, and only required browser permissions remain available.
+5. **Input and browser safeguards.** OCR and live camera capture stay in the browser; image/video sizes are bounded, content security headers are active, and camera/microphone access is requested only for voluntary scan/search actions.
 
 ## Next — expand the catalog safely
 

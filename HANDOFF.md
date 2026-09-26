@@ -6,7 +6,7 @@
 
 ## Current state
 
-The Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, browser speech recognition, source-backed discovery lookup, and exact typed GTIN/UPC lookup. The browser queries the FastAPI/SQL catalog through Vite's local `/api` proxy, with a reviewed static fallback only if the API is unavailable. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. There are two detailed US package-label seed products and 85 source-backed catalog discoveries awaiting exact label verification, for 87 total records across 23 categories.
+The Vite MVP builds with `npm run build`; it supports text, live browser-camera label capture, image OCR, selected-video-frame OCR, browser speech recognition, source-backed discovery lookup, and exact typed GTIN/UPC lookup. The browser queries the FastAPI/SQL catalog through Vite's local `/api` proxy, with a reviewed static fallback only if the API is unavailable. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. There are two detailed US package-label seed products and 85 source-backed catalog discoveries awaiting exact label verification, for 87 total records across 23 categories.
 
 ## Important implementation choices
 
@@ -16,7 +16,7 @@ The Vite MVP builds with `npm run build`; it supports text, image OCR, selected-
 - [US beverage catalog source research](docs/research/us-beverage-catalog-sources.md) selects USDA FoodData Central Branded Foods as the lawful nationwide discovery baseline. Do not bulk scrape manufacturer pages.
 - [Initial portfolio research](docs/research/initial-us-beverage-portfolio.md) provides public source links and package-size evidence for the original 29 discoveries. [Coffee label starter research](docs/research/coffee-label-starter-batch.md) documents the 21 coffee additions, and [diverse non-coffee expansion research](docs/research/diverse-noncoffee-expansion-batch.md) documents the 35 additional discoveries. A candidate has no inferred ingredients; only reviewed label versions receive assessments.
 - `scripts/bootstrap_db.py` seeds local SQLite and is destructive. Production must use a PostgreSQL `DATABASE_URL` and `scripts/migrate_db.py`; never depend on SQLite persistence in a Vercel Function or run the bootstrap against production.
-- OCR is processed in the browser with Tesseract.js; uploads are not persisted by this app.
+- OCR is processed in the browser with Tesseract.js; uploads and camera frames are not persisted by this app. Camera access is requested only after the user presses **Scan with camera**.
 - Voice recognition relies on `SpeechRecognition`/`webkitSpeechRecognition`, which is browser-dependent.
 - Video scanning extracts one central/early frame. It is a useful MVP, not a guarantee that every frame is read.
 - Monster’s full ingredient panel is marked provisional in the dataset because only core facts came from the manufacturer product page. Verify with an in-hand label or a manufacturer label source before public release.
