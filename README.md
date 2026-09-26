@@ -4,7 +4,7 @@ ClearSip is an early, educational beverage-label awareness app. A user can type 
 
 ## What is in this MVP
 
-- Text lookup for Coca-Cola Zero Sugar and Monster Energy Zero Sugar (US seed records)
+- API-backed text lookup against the versioned local SQL catalog, with reviewed seed-label fallback when the API is unavailable
 - Local, in-browser OCR for a product image and a selected video frame
 - Browser-native speech recognition for a spoken drink name
 - Product facts separated from interpretive context
@@ -27,23 +27,18 @@ Chrome browser UI  →  FastAPI `/api`  →  PostgreSQL (production)
 
 ## Run locally
 
-```bash
-npm install
-npm run dev
-```
-
-Then open the local Vite address shown in the terminal. For a production check, run `npm run build`.
-
-For the API and local SQL seed:
+For the API, local SQL seed, and browser app:
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python scripts/bootstrap_db.py
 .venv/bin/uvicorn api.index:app --reload
+npm install
+npm run dev
 ```
 
-The API is then available at `http://127.0.0.1:8000/api/health` and its interactive docs at `http://127.0.0.1:8000/docs`.
+The API is available at `http://127.0.0.1:8000/api/health` and its interactive docs at `http://127.0.0.1:8000/docs`. Vite proxies `/api` to that local server, so the browser application reads the same catalog that will be deployed on Vercel. For a production check, run `npm run build`.
 
 ### Label assessment and dataset refresh
 
@@ -108,12 +103,11 @@ See [the initial portfolio list](docs/research/initial-us-beverage-portfolio.md)
 
 ## Recommended next steps
 
-1. Connect the browser UI to the FastAPI read endpoints, replacing its temporary client-side seed lookup.
-2. Build the external FoodData Central ETL worker and its PostgreSQL migration, beginning with current US branded beverage records.
-3. Add barcode lookup (for exact package-size matching) and a reviewed “unmatched label” queue.
-4. Add auth, consent, retention controls, and a moderation/review workflow before retaining any uploads.
-5. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before public release.
-6. Add food products only after the beverage source/provenance workflow is stable.
+1. Add a result-selection step when a search returns multiple packages, then add barcode lookup for exact package-size matching.
+2. Build the external FoodData Central ETL worker and PostgreSQL migration, beginning with current US branded beverage records.
+3. Add auth, consent, retention controls, and a moderation/review workflow before retaining any uploads.
+4. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before public release.
+5. Add food products only after the beverage source/provenance workflow is stable.
 
 ## Scope statement
 
