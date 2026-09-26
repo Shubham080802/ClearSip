@@ -40,6 +40,21 @@ npm run dev
 
 The API is available at `http://127.0.0.1:8000/api/health` and its interactive docs at `http://127.0.0.1:8000/docs`. Vite proxies `/api` to that local server, so the browser application reads the same catalog that will be deployed on Vercel. For a production check, run `npm run build`.
 
+### Production database migrations
+
+[`migrations/`](migrations) is the immutable production schema history. Apply
+it as a separate deployment step using the Production `DATABASE_URL`; it is
+idempotent, verifies the checksum of every already-applied migration, and
+uses a PostgreSQL advisory lock to prevent simultaneous deploys from racing.
+
+```bash
+DATABASE_URL=postgresql://... .venv/bin/python scripts/migrate_db.py
+```
+
+Never run `scripts/bootstrap_db.py` against production: it deliberately drops
+and recreates the local development database. Add a new numbered migration for
+each production schema change; never edit an applied migration.
+
 ### Label assessment and dataset refresh
 
 Each current package label receives a transparent assessment of the disclosed

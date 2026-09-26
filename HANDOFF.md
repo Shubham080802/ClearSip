@@ -1,21 +1,21 @@
 # ClearSip project handoff
 
-**Last updated:** 2026-09-24  
-**Repository:** `Shubham080802/ClearSip` (private; `main` is pushed)
+**Last updated:** 2026-09-25
+**Repository:** `Shubham080802/ClearSip` (public; `main` is pushed)
 **Local path:** `/Users/shubhamkumar/Documents/GITHUB Projects/ClearSip`
 
 ## Current state
 
-The initial Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, and browser speech recognition. A FastAPI/SQL foundation is now also in place and has been validated against locally seeded SQLite. There are two detailed US package-label seed products and 29 source-backed catalog discoveries awaiting exact label verification.
+The Vite MVP builds with `npm run build`; it supports text, image OCR, selected-video-frame OCR, and browser speech recognition. The browser now queries the FastAPI/SQL catalog through Vite's local `/api` proxy, with a reviewed static fallback only if the API is unavailable. There are two detailed US package-label seed products and 29 source-backed catalog discoveries awaiting exact label verification.
 
 ## Important implementation choices
 
-- `src/data.js` is a deliberately small, versioned seed dataset.
-- `api/index.py` exports the Vercel-compatible FastAPI app; `data/schema.sql` models products, ingredients, and product-specific assessments.
+- `src/data.js` is a deliberately small reviewed fallback; `src/catalog-api.js` adapts sourced API records to the browser UI.
+- `api/index.py` exports the Vercel-compatible FastAPI app. `migrations/` is the immutable production schema history; `data/schema.sql` remains the local-bootstrap schema.
 - The catalog is normalized as manufacturer → family → variant → package → label version → ingredient assessment. Read `CONTEXT.md` before changing those terms.
 - [US beverage catalog source research](docs/research/us-beverage-catalog-sources.md) selects USDA FoodData Central Branded Foods as the lawful nationwide discovery baseline. Do not bulk scrape manufacturer pages.
 - [Initial portfolio research](docs/research/initial-us-beverage-portfolio.md) provides public source links and package-size evidence for the 29 discoveries. A candidate has no inferred ingredients; only reviewed label versions receive assessments.
-- `scripts/bootstrap_db.py` seeds local SQLite. Production must use a PostgreSQL `DATABASE_URL` from a Vercel Marketplace database integration; never depend on SQLite persistence in a Vercel Function.
+- `scripts/bootstrap_db.py` seeds local SQLite and is destructive. Production must use a PostgreSQL `DATABASE_URL` and `scripts/migrate_db.py`; never depend on SQLite persistence in a Vercel Function or run the bootstrap against production.
 - OCR is processed in the browser with Tesseract.js; uploads are not persisted by this app.
 - Voice recognition relies on `SpeechRecognition`/`webkitSpeechRecognition`, which is browser-dependent.
 - Video scanning extracts one central/early frame. It is a useful MVP, not a guarantee that every frame is read.
@@ -31,7 +31,7 @@ The initial Vite MVP builds with `npm run build`; it supports text, image OCR, s
 
 ## Next recommended task
 
-Connect the browser lookup to `GET /api/products` and `GET /api/products/{id}`, then build a separate FoodData Central ETL worker into production PostgreSQL. It must retain FDC ID, source release, fetch time, source hash, package/GTIN, market, label version, and verification state. Do not run nationwide import inside Vercel Functions or collect/retain consumer uploads without explicit consent and documented retention/deletion controls.
+Provision production PostgreSQL, apply `scripts/migrate_db.py` through a protected deployment workflow, then build a separate FoodData Central ETL worker into it. The worker must retain FDC ID, source release, fetch time, source hash, package/GTIN, market, label version, and verification state. Do not run nationwide import inside Vercel Functions or collect/retain consumer uploads without explicit consent and documented retention/deletion controls.
 
 ## Usage-limit continuation instruction
 
