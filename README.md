@@ -132,7 +132,7 @@ The full acquisition, licensing, and update plan is in [the US beverage catalog 
 
 ### Current catalog status
 
-The local development dataset now has two **package-label records** with ingredient assessments and 50 **source-backed catalog discoveries** across Coca-Cola, Sprite, Powerade, Dasani, Pepsi, Mountain Dew, Gatorade, Aquafina, Monster, Red Bull, Keurig Dr Pepper brands, LaCroix, and a coffee starter batch. The coffee batch covers STōK cold brews, La Colombe canned lattes, Dunkin' concentrates, and Starbucks concentrates. Discovery records retain available size evidence and a source link, but intentionally have no guessed ingredient panel. They graduate to package-label records only after the exact US package/label is verified.
+The local development dataset now has two **package-label records** with ingredient assessments and 85 **source-backed catalog discoveries**. It covers major sodas, water, sports drinks, energy drinks, coffee, juice, tea-caffeine energy drinks, sparkling water, plant-based oat beverages, and functional soda. The coffee batch covers STōK cold brews, La Colombe canned lattes, Dunkin' concentrates, and Starbucks concentrates; the diverse expansion includes Ocean Spray, V8, Hint, Waterloo, Oatly, and OLIPOP. Discovery records retain available size evidence and a source link, but intentionally have no guessed ingredient panel. They graduate to package-label records only after the exact US package/label is verified.
 
 See [the initial portfolio list](docs/research/initial-us-beverage-portfolio.md) for the beverage families, flavors, package-size evidence, and verification status.
 

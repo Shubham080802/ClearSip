@@ -22,12 +22,15 @@ assert monster["label_context"]["overall_status"] == "caffeine_context"
 assert "40% of FDA" in monster["label_context"]["frequent_intake_context"]
 assert len(search_products("Coca")) == 1
 assert search_products("Monster Zero Sugar")[0]["display_name"] == "Monster Energy Zero Sugar"
-assert len(catalog_discoveries(limit=100)) == 50
+assert len(catalog_discoveries(limit=100)) == 85
 assert len(catalog_discoveries(query="Pepsi", limit=100)) == 8
 assert catalog_discoveries(query="Pepsi Zero", limit=100)[0]["variant_name"] == "Pepsi Zero Sugar"
 coffee = catalog_discoveries(query="La Colombe Triple", limit=100)[0]
 assert coffee["variant_name"] == "La Colombe Triple Draft Latte"
 assert coffee["observed_package_sizes"] == "9 fl oz can"
-assert catalog_summary() == {"reviewed_package_labels": 2, "catalog_discoveries": 50}
+energy = catalog_discoveries(query="V8 Energy Peach", limit=100)[0]
+assert energy["variant_name"] == "Peach Mango"
+assert energy["observed_package_sizes"] == "8 fl oz can (237 mL)"
+assert catalog_summary() == {"reviewed_package_labels": 2, "catalog_discoveries": 85}
 
 print("API smoke tests passed")
