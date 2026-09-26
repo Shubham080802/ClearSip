@@ -27,12 +27,25 @@ def rows_to_package(rows: list[dict]) -> dict:
         "gtin": first["gtin"],
         "fdc_id": first["fdc_id"],
         "serving": first["serving"],
+        "servings_per_container": first["servings_per_container"],
         "calories": first["calories"],
+        "saturated_fat_g": first["saturated_fat_g"],
+        "total_sugar_g": first["total_sugar_g"],
         "added_sugar_g": first["added_sugar_g"],
+        "sodium_mg": first["sodium_mg"],
         "caffeine_mg": first["caffeine_mg"],
         "verification_status": first["verification_status"],
         "label_observed_on": first["label_observed_on"],
         "source": {"publisher": first["publisher"], "url": first["source_url"], "accessed_on": first["accessed_on"]},
+        "label_context": {
+            "overall_status": first["overall_status"],
+            "sugar_free_claim_status": first["sugar_free_claim_status"],
+            "preservative_free_claim_status": first["preservative_free_claim_status"],
+            "healthy_claim_status": first["healthy_claim_status"],
+            "frequent_intake_context": first["frequent_intake_context"],
+            "summary": first["assessment_summary"],
+            "policy_version": first["policy_version"],
+        },
         "ingredients": [
             {"name": row["ingredient_name"], "role": row["role"], "assessment": row["assessment"], "evidence_status": row["evidence_status"], "functional_class": row["functional_class"], "plain_language_summary": row["plain_language_summary"], "intake_context": row["intake_context"], "profile_evidence_level": row["profile_evidence_level"], "source_url": row["ingredient_source_url"] or row["profile_source_url"]}
             for row in rows if row["ingredient_name"]
@@ -90,9 +103,12 @@ def product_detail(package_id: str) -> dict:
     statement = f"""
         SELECT pp.id AS package_id, pp.market, pp.package_description, pp.gtin, pp.fdc_id,
                bv.display_name, bv.flavor_name, bv.category, bf.name AS family_name,
-               m.name AS manufacturer_name, lv.serving, lv.calories, lv.added_sugar_g,
-               lv.caffeine_mg, lv.verification_status, lv.label_observed_on,
+               m.name AS manufacturer_name, lv.serving, lv.servings_per_container, lv.calories, lv.saturated_fat_g, lv.total_sugar_g,
+               lv.added_sugar_g, lv.sodium_mg, lv.caffeine_mg, lv.verification_status, lv.label_observed_on,
                s.publisher, s.url AS source_url, s.accessed_on,
+               la.overall_status, la.sugar_free_claim_status, la.preservative_free_claim_status,
+               la.healthy_claim_status, la.frequent_intake_context, la.summary AS assessment_summary,
+               la.policy_version,
                i.name AS ingredient_name, li.role, li.assessment, li.evidence_status,
                li.source_url AS ingredient_source_url, ip.functional_class,
                ip.plain_language_summary, ip.intake_context,
@@ -103,6 +119,7 @@ def product_detail(package_id: str) -> dict:
         JOIN manufacturers m ON m.id = bf.manufacturer_id
         JOIN label_versions lv ON lv.package_id = pp.id AND lv.is_current = 1
         JOIN source_records s ON s.id = lv.source_id
+        LEFT JOIN label_assessments la ON la.label_version_id = lv.id
         LEFT JOIN label_ingredients li ON li.label_version_id = lv.id
         LEFT JOIN ingredients i ON i.id = li.ingredient_id
         LEFT JOIN ingredient_profiles ip ON ip.ingredient_id = i.id

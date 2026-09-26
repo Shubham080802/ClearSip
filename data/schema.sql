@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS source_records (
   url TEXT NOT NULL,
   market TEXT NOT NULL,
   accessed_on TEXT NOT NULL,
-  source_type TEXT NOT NULL CHECK (source_type IN ('manufacturer_page', 'manufacturer_label', 'package_observation', 'regulatory', 'retailer_lead')),
+  source_type TEXT NOT NULL CHECK (source_type IN ('manufacturer_page', 'manufacturer_label', 'package_observation', 'regulatory', 'retailer_lead', 'usda_fdc_branded')),
   content_hash TEXT,
   UNIQUE (url, market, accessed_on)
 );
@@ -60,13 +60,17 @@ CREATE TABLE IF NOT EXISTS label_versions (
   package_id TEXT NOT NULL REFERENCES product_packages(id),
   source_id TEXT NOT NULL REFERENCES source_records(id),
   serving TEXT NOT NULL,
+  servings_per_container REAL,
   calories INTEGER,
+  saturated_fat_g REAL,
+  total_sugar_g REAL,
   added_sugar_g REAL,
+  sodium_mg REAL,
   caffeine_mg INTEGER,
   ingredient_statement TEXT,
   contains_statement TEXT,
   front_label_claims TEXT,
-  verification_status TEXT NOT NULL CHECK (verification_status IN ('manufacturer_verified', 'package_verified', 'needs_package_verification')),
+  verification_status TEXT NOT NULL CHECK (verification_status IN ('manufacturer_verified', 'package_verified', 'catalog_label_match', 'needs_package_verification')),
   label_observed_on TEXT NOT NULL,
   is_current INTEGER NOT NULL DEFAULT 1 CHECK (is_current IN (0, 1))
 );
@@ -96,4 +100,16 @@ CREATE TABLE IF NOT EXISTS label_ingredients (
   evidence_status TEXT NOT NULL CHECK (evidence_status IN ('label_context', 'context_matters', 'worth_watching', 'not_fully_specified')),
   source_url TEXT,
   PRIMARY KEY (label_version_id, ingredient_id)
+);
+
+CREATE TABLE IF NOT EXISTS label_assessments (
+  label_version_id TEXT PRIMARY KEY REFERENCES label_versions(id),
+  overall_status TEXT NOT NULL CHECK (overall_status IN ('no_label_based_concern_identified', 'caffeine_context', 'routine_intake_caution', 'more_label_data_needed')),
+  sugar_free_claim_status TEXT NOT NULL CHECK (sugar_free_claim_status IN ('not_claimed', 'appears_label_aligned', 'appears_inconsistent', 'needs_review', 'not_assessable')),
+  preservative_free_claim_status TEXT NOT NULL CHECK (preservative_free_claim_status IN ('not_claimed', 'no_declared_preservative_detected', 'declared_preservative_detected', 'not_assessable')),
+  healthy_claim_status TEXT NOT NULL CHECK (healthy_claim_status IN ('not_claimed', 'not_assessable_from_label_alone')),
+  frequent_intake_context TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  assessed_on TEXT NOT NULL
 );

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import sqlite3
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 DATABASE = ROOT / "data" / "clearsip.db"
 SCHEMA = ROOT / "data" / "schema.sql"
 FDA_SWEETENER_SOURCE = "https://www.fda.gov/food/food-additives-petitions/aspartame-and-other-sweeteners-food"
@@ -16,7 +18,7 @@ def main() -> None:
     DATABASE.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(DATABASE) as conn:
         # This is a development bootstrap, deliberately rebuilding its disposable local database.
-        for table in ("label_ingredients", "ingredient_profiles", "label_versions", "source_records", "catalog_discoveries", "product_packages", "ingredients", "beverage_variants", "beverage_families", "manufacturers", "product_ingredients", "products"):
+        for table in ("label_assessments", "label_ingredients", "ingredient_profiles", "label_versions", "source_records", "catalog_discoveries", "product_packages", "ingredients", "beverage_variants", "beverage_families", "manufacturers", "product_ingredients", "products"):
             conn.execute(f"DROP TABLE IF EXISTS {table}")
         conn.executescript(SCHEMA.read_text())
         conn.executemany("INSERT INTO manufacturers VALUES (?, ?, ?)", [
@@ -69,9 +71,9 @@ def main() -> None:
             ("coca-cola-zero-source", "The Coca-Cola Company", "https://www.coca-cola.com/us/en/brands/coca-cola/products/zero", "United States", "2026-09-24", "manufacturer_page", None),
             ("monster-zero-source", "Monster Energy", "https://www.monsterenergy.com/en-us/energy-drinks/monster-energy/zero-sugar/", "United States", "2026-09-24", "manufacturer_page", None),
         ])
-        conn.executemany("INSERT INTO label_versions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-            ("coca-cola-zero-2026-09-24", "coca-cola-zero-sugar-12oz-us", "coca-cola-zero-source", "12 fl oz (355 mL)", 0, 0, 34, None, None, "Zero Sugar", "manufacturer_verified", "2026-09-24", 1),
-            ("monster-zero-2026-09-24", "monster-zero-sugar-16oz-us", "monster-zero-source", "16 fl oz (473 mL)", 10, 0, 160, None, None, "Zero Sugar", "needs_package_verification", "2026-09-24", 1),
+        conn.executemany("INSERT INTO label_versions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+            ("coca-cola-zero-2026-09-24", "coca-cola-zero-sugar-12oz-us", "coca-cola-zero-source", "12 fl oz (355 mL)", 1, 0, 0, 0, 0, 40, 34, "Carbonated water, caramel color, phosphoric acid, aspartame, potassium benzoate (to protect taste), natural flavors, potassium citrate, acesulfame potassium, caffeine, stevia extract.", "Phenylketonurics: Contains phenylalanine.", "Zero Sugar", "manufacturer_verified", "2026-09-24", 1),
+            ("monster-zero-2026-09-24", "monster-zero-sugar-16oz-us", "monster-zero-source", "16 fl oz (473 mL)", 1, 10, 0, 0, 0, 380, 160, "Carbonated water, citric acid, erythritol, natural flavors, taurine, sodium citrate, Panax ginseng flavor, L-carnitine L-tartrate, caffeine, sucralose, sorbic acid, benzoic acid, fruit juice (color), niacinamide, acesulfame potassium, salt, D-glucuronolactone, guarana extract, inositol, pyridoxine hydrochloride, riboflavin, cyanocobalamin.", None, "Zero Sugar", "needs_package_verification", "2026-09-24", 1),
         ])
         conn.executemany("INSERT INTO ingredients VALUES (?, ?)", [
             ("caffeine", "Caffeine"), ("aspartame", "Aspartame"), ("ace-k", "Acesulfame potassium"), ("sucralose", "Sucralose"), ("erythritol", "Erythritol"), ("taurine", "Taurine"),
@@ -94,6 +96,9 @@ def main() -> None:
             ("monster-zero-2026-09-24", "ace-k", 4, "High-intensity sweetener", "FDA lists an ADI of 15 mg/kg/day. The label amount is not disclosed, so an intake comparison is unavailable.", "context_matters", FDA_SWEETENER_SOURCE),
             ("monster-zero-2026-09-24", "caffeine", 5, "Stimulant", "160 mg per listed serving. FDA's 400 mg/day reference applies to most healthy adults, not every person.", "worth_watching", FDA_CAFFEINE_SOURCE),
         ])
+    from api.classification import refresh_assessments
+
+    refresh_assessments(DATABASE)
     print(f"Seeded {DATABASE}")
 
 

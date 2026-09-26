@@ -10,7 +10,11 @@ export const drinks = [
     region: "United States",
     verifiedOn: "2026-09-24",
     serving: "12 fl oz (355 mL)",
-    facts: [{ label: "Calories", value: "0" }, { label: "Added sugar", value: "0 g" }, { label: "Caffeine", value: "34 mg" }],
+    facts: [{ label: "Calories", value: "0" }, { label: "Total sugar", value: "0 g" }, { label: "Added sugar", value: "0 g" }, { label: "Sodium", value: "40 mg" }, { label: "Caffeine", value: "34 mg" }],
+    assessment: {
+      title: "“Zero Sugar” appears aligned with the disclosed label facts.",
+      context: "This package lists 0 g total and added sugar per serving. That checks the visible nutrition facts and ingredients, not an individual metabolic response or full legal compliance. It still contains caffeine and high-intensity sweeteners."
+    },
     formulationNote: "US product formulation. Ingredient lists and caffeine can vary by country, package size, and time; compare the package in your hand.",
     source: source("Coca-Cola Zero Sugar product page", "https://www.coca-cola.com/us/en/brands/coca-cola/products/zero", "Manufacturer product page; checked September 2026."),
     ingredients: [
@@ -33,7 +37,11 @@ export const drinks = [
     region: "United States",
     verifiedOn: "2026-09-24",
     serving: "16 fl oz (473 mL) can",
-    facts: [{ label: "Calories", value: "10" }, { label: "Added sugar", value: "0 g" }, { label: "Caffeine", value: "160 mg" }],
+    facts: [{ label: "Calories", value: "10" }, { label: "Total sugar", value: "0 g" }, { label: "Added sugar", value: "0 g" }, { label: "Sodium", value: "380 mg" }, { label: "Caffeine", value: "160 mg" }],
+    assessment: {
+      title: "“Zero Sugar” checks the disclosed sugar facts; caffeine still needs context.",
+      context: "This package lists 0 g total and added sugar per serving. Its 160 mg caffeine amount is 40% of FDA’s 400 mg/day context for most adults—not a personal limit. The package transcription remains provisional, so compare it with your can."
+    },
     formulationNote: "US product facts are manufacturer verified. The full ingredient panel in this seed record is a provisional package transcription, so compare your can’s Nutrition Facts and ingredient statement.",
     source: source("Monster Energy Zero Sugar product page", "https://www.monsterenergy.com/en-us/energy-drinks/monster-energy/zero-sugar/", "Manufacturer product page; checked September 2026."),
     ingredients: [
