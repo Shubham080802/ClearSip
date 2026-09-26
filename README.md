@@ -105,8 +105,10 @@ ClearSip is deployed from GitHub to Vercel. Its Vite frontend and FastAPI entryp
 
 The same configuration sends a restrictive Content Security Policy, blocks framing,
 and disables unneeded browser permissions. The policy permits only the application
-origin plus the Tesseract.js jsDelivr resources needed for browser-only OCR; the
-microphone remains available only for the voluntary voice-search feature.
+origin plus the Tesseract.js jsDelivr resources needed for browser-only OCR. Camera
+access is available only after a user presses **Scan with camera** and grants the
+browser prompt; the captured frame stays in the browser. The microphone remains
+available only for the voluntary voice-search feature.
 
 ## Data safety and provenance
 

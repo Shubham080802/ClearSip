@@ -1,0 +1,24 @@
+.scan-options { grid-template-columns:repeat(4,1fr); }
+.scan-option:disabled { cursor:wait; opacity:.65; }
+.scan-option-primary { border-color:#b9d873; background:#f4ffe0; }
+.scan-option-primary:hover { background:#eaffbd; border-color:#8bad3b; }
+.scan-option-primary .scan-icon { color:#335218; background:var(--lime); }
+
+.camera-dialog { width:min(700px, calc(100% - 32px)); padding:0; color:var(--navy); border:0; border-radius:16px; background:transparent; box-shadow:0 25px 80px rgba(0,0,0,.42); }
+.camera-dialog::backdrop { background:rgba(10,12,28,.72); backdrop-filter:blur(4px); }
+.camera-dialog-card { padding:25px; border-radius:16px; background:var(--paper); }
+.camera-dialog-header { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; }
+.camera-dialog-header h2 { margin:0; font:700 28px/1.05 "Playfair Display",serif; letter-spacing:-1px; }
+.camera-close { display:grid; flex:0 0 34px; place-items:center; width:34px; height:34px; color:var(--navy); border:1px solid var(--line); border-radius:50%; background:#fff; font-size:25px; line-height:1; }
+.camera-preview { position:relative; min-height:250px; margin:21px 0 14px; overflow:hidden; border-radius:12px; background:#111424; }
+.camera-preview video { display:block; width:100%; max-height:60vh; object-fit:cover; }
+.camera-guide { position:absolute; top:12%; right:13%; bottom:12%; left:13%; border:2px solid var(--lime); border-radius:12px; box-shadow:0 0 0 999px rgba(0,0,0,.16); }
+.camera-dialog-card > p { margin:0; color:var(--muted); font-size:12px; line-height:1.55; }
+.camera-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:20px; }
+.camera-actions button { min-height:43px; padding:0 15px; border-radius:8px; font-size:12px; font-weight:700; }
+.camera-secondary { color:#555b70; border:1px solid #d8d6d0; background:#fff; }
+.camera-capture { color:var(--navy); border:0; background:var(--lime); }
+.camera-capture:disabled { cursor:wait; opacity:.65; }
+
+@media (max-width:800px) { .scan-options { grid-template-columns:repeat(2,1fr); } }
+@media (max-width:560px) { .camera-dialog-card { padding:19px; }.camera-dialog-header h2 { font-size:24px; }.camera-actions { flex-direction:column-reverse; }.camera-actions button { width:100%; } }

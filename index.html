@@ -35,7 +35,7 @@
 
       <section class="lookup-shell shell" id="lookup" aria-labelledby="lookup-heading">
         <div class="lookup-card">
-          <div class="lookup-intro"><p class="eyebrow">START A LABEL CHECK</p><h2 id="lookup-heading">What are you drinking?</h2><p>Use a name, label image, video, or your voice.</p></div>
+          <div class="lookup-intro"><p class="eyebrow">START A LABEL CHECK</p><h2 id="lookup-heading">What are you drinking?</h2><p>Use your camera, a name, image, video, or voice.</p></div>
           <div class="lookup-tools">
             <form id="search-form" class="search-form">
               <label class="sr-only" for="drink-query">Drink name</label>
@@ -44,7 +44,8 @@
             </form>
             <div class="quick-search" aria-label="Example searches"><button type="button" data-drink="Coca-Cola Zero Sugar">Coca-Cola Zero Sugar</button><button type="button" data-drink="Monster Energy Zero Sugar">Monster Zero Sugar</button></div>
             <div class="scan-options" aria-label="Other ways to identify a beverage">
-              <label class="scan-option"><input id="image-input" type="file" accept="image/*" /><span class="scan-icon">▧</span><span><b>Scan a label</b><small>Photo or screenshot · up to 12 MB</small></span><i>→</i></label>
+              <button id="camera-button" class="scan-option scan-option-primary" type="button"><span class="scan-icon">◫</span><span><b>Scan with camera</b><small>Point at a product label</small></span><i>→</i></button>
+              <label class="scan-option"><input id="image-input" type="file" accept="image/*" /><span class="scan-icon">▧</span><span><b>Choose a photo</b><small>Image or screenshot · up to 12 MB</small></span><i>→</i></label>
               <label class="scan-option"><input id="video-input" type="file" accept="video/*" /><span class="scan-icon">▷</span><span><b>Use a video</b><small>We read a clear frame · up to 80 MB</small></span><i>→</i></label>
               <button id="voice-button" class="scan-option" type="button"><span class="scan-icon">◉</span><span><b>Say its name</b><small>Browser voice search</small></span><i>→</i></button>
             </div>
@@ -52,6 +53,15 @@
           </div>
         </div>
       </section>
+
+      <dialog id="camera-dialog" class="camera-dialog" aria-labelledby="camera-heading">
+        <div class="camera-dialog-card">
+          <div class="camera-dialog-header"><div><p class="eyebrow">CAMERA LABEL SCAN</p><h2 id="camera-heading">Center the drink label</h2></div><button id="camera-close" class="camera-close" type="button" aria-label="Close camera">×</button></div>
+          <div class="camera-preview"><video id="camera-preview" autoplay playsinline muted aria-label="Live camera preview"></video><div class="camera-guide" aria-hidden="true"></div></div>
+          <p>Hold the front label steady inside the frame, then capture it. The image is processed only in this browser.</p>
+          <div class="camera-actions"><button id="camera-cancel" class="camera-secondary" type="button">Cancel</button><button id="camera-capture" class="camera-capture" type="button">Capture and explain <span aria-hidden="true">→</span></button></div>
+        </div>
+      </dialog>
 
       <section class="catalog-band" id="catalog">
         <div class="shell catalog-grid"><div><p class="eyebrow">OPEN ABOUT OUR COVERAGE</p><h2>Every result carries its source and status.</h2></div><div class="catalog-stat"><strong id="catalog-reviewed-count">2</strong><span>reviewed package labels</span></div><div class="catalog-stat"><strong id="catalog-discovery-count">29</strong><span>US drink discoveries in review</span></div><p class="catalog-note">We never fill in a missing recipe. A drink is only “reviewed” after a package-level label or official source is attached.</p><details class="discovery-browser"><summary>Browse the sourced discoveries currently in review <span>↓</span></summary><p>These are public product leads, not inferred ingredient panels. Available size evidence and source links are shown so each record can be independently checked.</p><div id="discovery-list" class="discovery-list" aria-live="polite">Loading discovery records…</div></details></div>

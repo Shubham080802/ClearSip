@@ -3,18 +3,26 @@ import { dataVersion, findDrink } from "./data.js";
 import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import "./style.css";
+import "./camera.css";
 
 const form = document.querySelector("#search-form");
 const query = document.querySelector("#drink-query");
 const imageInput = document.querySelector("#image-input");
 const videoInput = document.querySelector("#video-input");
 const voiceButton = document.querySelector("#voice-button");
+const cameraButton = document.querySelector("#camera-button");
+const cameraDialog = document.querySelector("#camera-dialog");
+const cameraPreview = document.querySelector("#camera-preview");
+const cameraCapture = document.querySelector("#camera-capture");
+const cameraClose = document.querySelector("#camera-close");
+const cameraCancel = document.querySelector("#camera-cancel");
 const scanStatus = document.querySelector("#scan-status");
 const result = document.querySelector("#result");
 const emptyState = document.querySelector("#empty-state");
 const reviewedCount = document.querySelector("#catalog-reviewed-count");
 const discoveryCount = document.querySelector("#catalog-discovery-count");
 const discoveryList = document.querySelector("#discovery-list");
+let cameraStream = null;
 
 const statusLabels = { watch: "Worth watching", context: "Context matters", neutral: "Label context", unknown: "Not fully specified" };
 
@@ -158,12 +166,79 @@ async function ocrFile(file, origin) {
   }
 }
 
+function stopCamera() {
+  cameraStream?.getTracks().forEach((track) => track.stop());
+  cameraStream = null;
+  cameraPreview.srcObject = null;
+  if (cameraDialog.open) cameraDialog.close();
+}
+
+async function openCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    scanStatus.textContent = "Camera scanning is not supported in this browser. Choose a photo instead.";
+    return;
+  }
+
+  cameraButton.disabled = true;
+  scanStatus.textContent = "Opening your camera…";
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    });
+    cameraPreview.srcObject = cameraStream;
+    cameraDialog.showModal();
+    await cameraPreview.play();
+    scanStatus.textContent = "";
+  } catch (error) {
+    console.error(error);
+    stopCamera();
+    scanStatus.textContent = "Camera access was unavailable. Allow camera access, then try again, or choose a photo instead.";
+  } finally {
+    cameraButton.disabled = false;
+  }
+}
+
+async function captureCameraFrame() {
+  if (!cameraPreview.videoWidth || !cameraPreview.videoHeight) {
+    scanStatus.textContent = "The camera is still starting. Try capture again in a moment.";
+    return;
+  }
+
+  cameraCapture.disabled = true;
+  const canvas = document.createElement("canvas");
+  const longestEdge = 1920;
+  const scale = Math.min(1, longestEdge / Math.max(cameraPreview.videoWidth, cameraPreview.videoHeight));
+  canvas.width = Math.round(cameraPreview.videoWidth * scale);
+  canvas.height = Math.round(cameraPreview.videoHeight * scale);
+  canvas.getContext("2d").drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+
+  try {
+    const frame = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    const problem = validateScanFile(frame, "image");
+    if (problem) throw new Error(problem);
+    stopCamera();
+    await ocrFile(frame, "camera label");
+  } catch (error) {
+    console.error(error);
+    scanStatus.textContent = error.message || "The camera image could not be captured. Try again or choose a photo.";
+  } finally {
+    cameraCapture.disabled = false;
+  }
+}
+
 imageInput.addEventListener("change", () => {
   const file = imageInput.files?.[0];
   const problem = validateScanFile(file, "image");
   if (problem) { scanStatus.textContent = problem; return; }
   ocrFile(file, "image label");
 });
+
+cameraButton.addEventListener("click", openCamera);
+cameraCapture.addEventListener("click", captureCameraFrame);
+cameraClose.addEventListener("click", stopCamera);
+cameraCancel.addEventListener("click", stopCamera);
+cameraDialog.addEventListener("close", stopCamera);
 
 videoInput.addEventListener("change", async () => {
   const file = videoInput.files?.[0];
