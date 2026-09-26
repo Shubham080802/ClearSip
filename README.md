@@ -87,7 +87,7 @@ for a nationwide backfill, not a Vercel request.
 
 Chrome can be your primary working surface: use GitHub's web editor (`github.dev`) for simple source changes, the Vercel dashboard for deployments and environment variables, and Vercel preview URLs to test each pushed commit. The Git repository remains the authoritative source, so browser-made edits should still be committed to GitHub.
 
-When you are ready to deploy, import the GitHub repository into Vercel from Chrome. Vercel can deploy FastAPI as a Python Function. Add a Marketplace PostgreSQL integration (for example, Neon) and set its injected `DATABASE_URL`; do not deploy with the local SQLite database. No Vercel project or database has been created by this repository.
+ClearSip is deployed from GitHub to Vercel. Its Vite frontend and FastAPI entrypoint are routed in [`vercel.json`](vercel.json), so `/api/*` reaches the Python function while every other path loads the browser app. Add a managed PostgreSQL integration (for example, Neon) and set its injected `DATABASE_URL`; do not use the local SQLite database in production.
 
 ## Data safety and provenance
 
