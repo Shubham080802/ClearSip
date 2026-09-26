@@ -1,6 +1,7 @@
 import { createWorker } from "tesseract.js";
 import { dataVersion, findDrink } from "./data.js";
 import { findCatalogProduct, getCatalogSummary } from "./catalog-api.js";
+import { validateScanFile } from "./scan-guardrails.js";
 import "./style.css";
 
 const form = document.querySelector("#search-form");
@@ -96,11 +97,17 @@ async function ocrFile(file, origin) {
   }
 }
 
-imageInput.addEventListener("change", () => { if (imageInput.files?.[0]) ocrFile(imageInput.files[0], "image label"); });
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files?.[0];
+  const problem = validateScanFile(file, "image");
+  if (problem) { scanStatus.textContent = problem; return; }
+  ocrFile(file, "image label");
+});
 
 videoInput.addEventListener("change", async () => {
   const file = videoInput.files?.[0];
-  if (!file) return;
+  const problem = validateScanFile(file, "video");
+  if (problem) { scanStatus.textContent = problem; return; }
   scanStatus.textContent = "Finding a readable video frame…";
   const video = document.createElement("video");
   video.muted = true;
@@ -114,7 +121,8 @@ videoInput.addEventListener("change", async () => {
     canvas.width = video.videoWidth; canvas.height = video.videoHeight;
     canvas.getContext("2d").drawImage(video, 0, 0);
     const frame = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-    if (frame) await ocrFile(frame, "video frame");
+    if (!frame) throw new Error("No readable video frame was produced.");
+    await ocrFile(frame, "video frame");
   } catch (error) {
     console.error(error);
     scanStatus.textContent = "The video frame could not be scanned. Try a clear still image or search by name.";

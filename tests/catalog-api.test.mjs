@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { findCatalogProduct, getCatalogSummary, normalizeName, toDisplayProduct } from "../src/catalog-api.js";
+import { MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, validateScanFile } from "../src/scan-guardrails.js";
 
 const product = {
   id: "cola-12",
@@ -48,5 +49,9 @@ assert.equal(display.assessment.title, "The visible sugar claim appears aligned 
 assert.equal(calls.length, 2);
 assert.equal(toDisplayProduct(product).facts.length, 6);
 assert.deepEqual(await getCatalogSummary(fetchFn), { reviewed_package_labels: 2, catalog_discoveries: 29 });
+assert.equal(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES }, "image"), null);
+assert.match(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES + 1 }, "image"), /12 MB/);
+assert.equal(validateScanFile({ type: "video/mp4", size: MAX_VIDEO_BYTES }, "video"), null);
+assert.match(validateScanFile({ type: "text/plain", size: 1 }, "video"), /supported video/);
 
 console.log("catalog API adapter tests passed");

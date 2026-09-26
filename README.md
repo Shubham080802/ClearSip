@@ -112,6 +112,7 @@ The seed dataset is intentionally small. See [the research note](docs/research/s
 - Do not classify ingredients as universally “good,” “bad,” “harmful,” or “beneficial.” Present a label fact, its function, the known quantity, applicable authoritative context, and uncertainty separately.
 - Do not calculate an ADI percentage unless the label or manufacturer actually discloses the ingredient amount.
 - Do not retain user images or videos in this MVP. OCR occurs in the browser and the upload is not sent to an application server.
+- The browser rejects non-media, empty, and oversized scan inputs before OCR (12 MB images and 80 MB videos).
 
 ## Nationwide catalog coverage
 
