@@ -1,5 +1,9 @@
 import { normalizeName } from "./catalog-api.js";
 
+export function hasExplanation(option) {
+  return Boolean((option?.packageId && option.ingredientsAvailable) || option?.localDrink || option?.discovery?.source_label?.ingredients);
+}
+
 // Only parse explicit net-size lists. Serving/prepared-volume notes must never
 // become selectable packages (especially for concentrates).
 export function parsePackageSizes(discovery) {
@@ -28,7 +32,7 @@ export function buildPackageChoices(packages, discoveries) {
   };
   for (const item of packages) {
     groupFor(item.display_name, item.market).options.push({
-      label: item.package_description, packageId: item.id,
+      label: item.package_description, packageId: item.id, ingredientsAvailable: Boolean(item.has_ingredients),
     });
   }
   for (const discovery of discoveries) {
@@ -42,6 +46,9 @@ export function buildPackageChoices(packages, discoveries) {
       name = [...familyWords, ...variantWords.slice(overlap)].join(" ");
     }
     const group = groupFor(name, discovery.market);
+    group.discovery = discovery;
+    // Keep the manufacturer panel available on existing package options too.
+    for (const option of group.options) option.discovery ||= discovery;
     const sizes = parsePackageSizes(discovery);
     for (const label of sizes) {
       if (!group.options.some((option) => sizeIdentity(option.label) === sizeIdentity(label))) {
@@ -49,7 +56,7 @@ export function buildPackageChoices(packages, discoveries) {
       }
     }
     if (!sizes.length && !group.options.length) {
-      group.options.push({ label: "Size not confirmed — view available information", discovery });
+      group.options.push({ label: "Size not confirmed — manufacturer information", discovery });
     }
   }
   return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name));

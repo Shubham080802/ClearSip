@@ -24,6 +24,7 @@ Chrome browser UI  →  FastAPI `/api`  →  PostgreSQL (production)
 - [`data/schema.sql`](data/schema.sql) is the relational source of truth for products, ingredients, and their product-specific assessments.
 - The catalog keeps **manufacturer → beverage family → variant/flavor → market-specific package → dated label version** separate. A 12 oz can and a 20 oz bottle are never silently treated as one item.
 - SQLite is deliberately local-only. Vercel functions have no durable local disk, so production must receive a PostgreSQL `DATABASE_URL` from a managed provider.
+- Dated `data/reviewed-labels-*.json` snapshots supplement SQL with manufacturer **variant-level** ingredient panels. They ship with the Python function and never certify all sizes as exact package matches. Unknown nutrient amounts remain null.
 
 ## Run locally
 
@@ -112,7 +113,7 @@ available only for the voluntary voice-search feature.
 
 ## Data safety and provenance
 
-Name searches let the user choose a drink/flavor and package size before opening a result. Sizes with a label load that exact package; sizes known only from a discovery source show the review status. Nutrition values remain per listed serving, with the package size shown separately. Serving-size and concentrate-preparation notes are not offered as package sizes.
+Name searches let the user choose a drink/flavor and package size before opening a result. Available manufacturer variant panels display the full ingredients, source notes, and nutrition per the manufacturer's stated serving, separately from the selected package size. They are not exact-package certification. Entries without ingredients are marked pending before selection and cannot open an empty explanation. Serving-size and concentrate-preparation notes are not offered as package sizes.
 
 The seed dataset is intentionally small. See [the research note](docs/research/seed-data-sources.md) before adding records. In particular:
 
@@ -136,7 +137,9 @@ The full acquisition, licensing, and update plan is in [the US beverage catalog 
 
 ### Current catalog status
 
-The local development dataset now has five **package-label records** with ingredient assessments and 85 **source-backed catalog discoveries**. The reviewed records include Coca-Cola Zero Sugar, Monster Energy Zero Sugar, and three Powerade variants (Grape, Lemon Lime, and Orange). It covers major sodas, water, sports drinks, energy drinks, coffee, juice, tea-caffeine energy drinks, sparkling water, plant-based oat beverages, and functional soda. The coffee batch covers STōK cold brews, La Colombe canned lattes, Dunkin' concentrates, and Starbucks concentrates; the diverse expansion includes Ocean Spray, V8, Hint, Waterloo, Oatly, and OLIPOP. Discovery records retain available size evidence and a source link, but intentionally have no guessed ingredient panel. They graduate to package-label records only after the exact US package/label is verified.
+The SQL catalog has five **package-label records** and 85 **source-backed catalog entries**; these overlap and must not be summed as unique drinks. The September 26 audit adds manufacturer ingredient panels for **79 of the 85 catalog entries**. Six remain pending: Monster Zero Ultra, Red Bull Original, STōK Extra Bold, and the unresolved Snapple, Bai, and LaCroix family placeholders. Unknown or conflicting nutrition amounts remain unavailable. Existing seed records are not all exact-package verified; the current manufacturer panel takes precedence in the UI where available.
+
+See the [all-entry availability audit](docs/research/catalog-availability-audit.md) and its linked manufacturer sources. Run `.venv/bin/python scripts/audit_catalog.py` to audit current SQL discoveries against shipped source panels. `/api/catalog-coverage` reports availability for every entry. CI checks every catalog entry and parsed size, including future missing-label entries, so a new discovery cannot silently become an ingredient explanation.
 
 See [the initial portfolio list](docs/research/initial-us-beverage-portfolio.md) for the beverage families, flavors, package-size evidence, and verification status.
 

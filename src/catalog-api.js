@@ -32,6 +32,9 @@ function claimTitle(context) {
 }
 
 export function toDisplayProduct(product) {
+  if (product.source_label) {
+    return toDisplaySourceLabel({ id: product.id, market: product.market, source_label: product.source_label }, product.package);
+  }
   const context = product.label_context || {};
   const facts = [
     ["Calories", displayValue(product.calories)],
@@ -47,6 +50,8 @@ export function toDisplayProduct(product) {
     name: product.name,
     region: product.market || "Market not specified",
     package: product.package || "Package size not specified",
+    ingredientStatement: product.ingredient_statement || "",
+    scopeNote: product.scope_note || "",
     serving: product.serving || product.package || "Package size not specified",
     facts,
     assessment: {
@@ -67,6 +72,30 @@ export function toDisplayProduct(product) {
     })),
     dataVersion: product.label_observed_on || "current label",
   };
+}
+
+export function toDisplaySourceLabel(discovery, selectedSize = "") {
+  const label = discovery.source_label;
+  if (!label?.ingredients) return null;
+  const display = toDisplayProduct({
+    ...label,
+    id: discovery.id,
+    name: label.name,
+    market: discovery.market,
+    package: selectedSize || "Package size not confirmed",
+    serving: label.serving || "Not stated in the available source",
+    ingredient_statement: label.ingredients,
+    ingredients: [],
+    source: { publisher: label.publisher, url: label.source_url },
+    verification_status: "manufacturer_variant_label",
+    label_observed_on: label.accessed_on,
+    scope_note: `Manufacturer information for this drink and flavor. Nutrition values use the source's stated serving, not the selected bottle volume. ${label.notes || "Compare the ingredient list with your package; formulations may differ."}`,
+  });
+  display.ingredients = (label.ingredient_functions || []).map((item) => ({
+    name: item.name, role: "Declared ingredient function", context: item.context,
+    status: "neutral", evidence: { url: label.source_url },
+  }));
+  return display;
 }
 
 function selectPackage(matches, query) {

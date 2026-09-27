@@ -6,11 +6,13 @@
 
 ## Current state
 
-The Vite MVP builds with `npm run build`; it supports text, live browser-camera label capture, image OCR, selected-video-frame OCR, browser speech recognition, source-backed discovery lookup, and exact typed GTIN/UPC lookup. The browser queries the FastAPI/SQL catalog through Vite's local `/api` proxy, with a reviewed static fallback only if the API is unavailable. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. There are two detailed US package-label seed products and 85 source-backed catalog discoveries awaiting exact label verification, for 87 total records across 23 categories.
+The Vite MVP builds with `npm run build`; it supports text, live browser-camera label capture, image OCR, selected-video-frame OCR, browser speech recognition, source-backed lookup, and typed GTIN/UPC lookup. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. SQL has five package records and 85 catalog entries (overlapping, not additive). The latest all-entry audit supplies manufacturer variant ingredient panels for 79 entries; six remain pending and are marked before selection.
 
 ## Important implementation choices
 
 - `src/data.js` is a deliberately small reviewed fallback; `src/catalog-api.js` adapts sourced API records to the browser UI.
+- `api/source_labels.py` validates committed `data/reviewed-labels-*.json` snapshots and supplements SQL with source panels. Vercel bundles them through `includeFiles`. A variant panel is NOT certification of each selectable package; nutrition stays per source serving, never silently scaled to bottle volume. Missing amounts remain null. Powerade Zero Mixed Berry now has a complete source statement.
+- `docs/research/catalog-availability-audit.md` audits all 85 entries. Pending: Monster Zero Ultra, Red Bull Original, STōK Extra Bold, Snapple, Bai, LaCroix. Do not substitute another flavor or repair malformed source text by guessing. CI runs `tests/catalog_coverage.py` and `tests/catalog-coverage.test.mjs` across all entries and size options.
 - `api/index.py` exports the Vercel-compatible FastAPI app. `migrations/` is the immutable production schema history; `data/schema.sql` remains the local-bootstrap schema.
 - The catalog is normalized as manufacturer → family → variant → package → label version → ingredient assessment. Read `CONTEXT.md` before changing those terms.
 - [US beverage catalog source research](docs/research/us-beverage-catalog-sources.md) selects USDA FoodData Central Branded Foods as the lawful nationwide discovery baseline. Do not bulk scrape manufacturer pages.

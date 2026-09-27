@@ -8,4 +8,8 @@
 .package-picker p { margin:12px 0; color:var(--muted); font-size:12px; line-height:1.5; }
 .package-picker button { min-height:44px; padding:10px 16px; border:0; border-radius:8px; background:var(--lime); color:var(--navy); font-weight:700; }
 .package-picker button:disabled { opacity:.5; cursor:not-allowed; }
+.source-scope, .ingredient-statement { padding:20px; border:1px solid #d9d5e9; border-radius:12px; background:#f6f4ff; color:#444967; line-height:1.65; }
+.ingredient-statement { margin-top:20px; }
+.ingredient-statement h3 { margin:0 0 10px; color:var(--navy); }
+.ingredient-statement p { margin:0; }
 @media(max-width:560px) { .package-fields { grid-template-columns:1fr; } .package-picker button { width:100%; } }

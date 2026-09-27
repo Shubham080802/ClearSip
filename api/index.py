@@ -7,6 +7,7 @@ import re
 from fastapi import FastAPI, HTTPException, Query
 
 from api.database import connection, placeholder
+from api.source_labels import source_labels, explain_source
 
 app = FastAPI(
     title="ClearSip API",
@@ -17,7 +18,10 @@ app = FastAPI(
 
 def rows_to_package(rows: list[dict]) -> dict:
     first = rows[0]
+    current_source = next((label for label in source_labels().values()
+                           if first["market"] == "United States" and label["name"].casefold() == first["display_name"].casefold()), None)
     return {
+        "source_label": explain_source(current_source) if current_source else None,
         "id": first["package_id"],
         "name": first["display_name"],
         "manufacturer": first["manufacturer_name"],
@@ -36,6 +40,7 @@ def rows_to_package(rows: list[dict]) -> dict:
         "added_sugar_g": first["added_sugar_g"],
         "sodium_mg": first["sodium_mg"],
         "caffeine_mg": first["caffeine_mg"],
+        "ingredient_statement": first["ingredient_statement"],
         "verification_status": first["verification_status"],
         "label_observed_on": first["label_observed_on"],
         "source": {"publisher": first["publisher"], "url": first["source_url"], "accessed_on": first["accessed_on"]},
@@ -72,7 +77,8 @@ def search_products(query: str = Query(min_length=2, max_length=120)) -> list[di
     term_filters = " AND ".join(f"{searchable_name} LIKE {marker}" for _ in terms)
     statement = f"""
         SELECT pp.id, bv.display_name, m.name AS manufacturer, bf.name AS family,
-               pp.market, pp.package_description, pp.gtin, pp.fdc_id, lv.caffeine_mg, lv.verification_status
+               pp.market, pp.package_description, pp.gtin, pp.fdc_id, lv.caffeine_mg, lv.verification_status,
+               CASE WHEN LENGTH(TRIM(COALESCE(lv.ingredient_statement, ''))) > 0 THEN 1 ELSE 0 END AS has_ingredients
         FROM product_packages pp
         JOIN beverage_variants bv ON bv.id = pp.variant_id
         JOIN beverage_families bf ON bf.id = bv.family_id
@@ -109,7 +115,21 @@ def catalog_discoveries(
     """
     with connection() as conn:
         records = conn.execute(statement, (*[f"%{term}%" for term in terms], limit)).fetchall()
-    return [dict(record) for record in records]
+    labels = source_labels()
+    return [{**dict(record), "source_label": explain_source(labels[record["id"]]) if record["id"] in labels else None}
+            for record in records]
+
+
+@app.get("/api/catalog-coverage")
+def catalog_coverage() -> dict:
+    """Explicit availability for every discovery; never equate a lead with a label."""
+    with connection() as conn:
+        discoveries = conn.execute("SELECT id, beverage_family_name, variant_name FROM catalog_discoveries ORDER BY id").fetchall()
+    labels = source_labels()
+    rows = [{"id": row["id"], "family": row["beverage_family_name"], "name": row["variant_name"],
+             "ingredients_available": row["id"] in labels} for row in discoveries]
+    return {"total_discoveries": len(rows), "with_source_ingredients": sum(row["ingredients_available"] for row in rows),
+            "missing_source_ingredients": sum(not row["ingredients_available"] for row in rows), "records": rows}
 
 
 @app.get("/api/catalog-summary")
@@ -123,7 +143,9 @@ def catalog_summary() -> dict[str, int]:
                 (SELECT COUNT(*) FROM catalog_discoveries) AS catalog_discoveries
             """
         ).fetchone()
-    return dict(record)
+    coverage = catalog_coverage()
+    return {**dict(record), "source_ingredient_panels": coverage["with_source_ingredients"],
+            "pending_ingredient_panels": coverage["missing_source_ingredients"]}
 
 
 def package_label_rows(column: str, value: str) -> list[dict]:
@@ -133,7 +155,7 @@ def package_label_rows(column: str, value: str) -> list[dict]:
         SELECT pp.id AS package_id, pp.market, pp.package_description, pp.gtin, pp.fdc_id,
                bv.display_name, bv.flavor_name, bv.category, bf.name AS family_name,
                m.name AS manufacturer_name, lv.serving, lv.servings_per_container, lv.calories, lv.saturated_fat_g, lv.total_sugar_g,
-               lv.added_sugar_g, lv.sodium_mg, lv.caffeine_mg, lv.verification_status, lv.label_observed_on,
+               lv.added_sugar_g, lv.sodium_mg, lv.caffeine_mg, lv.ingredient_statement, lv.verification_status, lv.label_observed_on,
                s.publisher, s.url AS source_url, s.accessed_on,
                la.overall_status, la.sugar_free_claim_status, la.preservative_free_claim_status,
                la.healthy_claim_status, la.frequent_intake_context, la.summary AS assessment_summary,

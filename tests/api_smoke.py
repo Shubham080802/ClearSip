@@ -36,6 +36,9 @@ assert coffee["observed_package_sizes"] == "9 fl oz can"
 energy = catalog_discoveries(query="V8 Energy Peach", limit=100)[0]
 assert energy["variant_name"] == "Peach Mango"
 assert energy["observed_package_sizes"] == "8 fl oz can (237 mL)"
-assert catalog_summary() == {"reviewed_package_labels": 5, "catalog_discoveries": 85}
+summary = catalog_summary()
+assert summary["reviewed_package_labels"] == 5
+assert summary["catalog_discoveries"] == 85
+assert summary["source_ingredient_panels"] + summary["pending_ingredient_panels"] == 85
 
 print("API smoke tests passed")
