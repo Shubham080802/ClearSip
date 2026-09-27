@@ -1,0 +1,23 @@
+[
+  {
+    "discovery_id": "dr-pepper-blackberry",
+    "name": "Dr Pepper Blackberry",
+    "source_url": "https://www.kdpproductfacts.com/lwr/apex/v66.0/PF_ProductAPI/getProductDetail?methodParams=%7B%22locale%22%3A%22en_US%22%2C%22productId%22%3A%22a0eWP000000sWfdYAE%22%7D",
+    "publisher": "Keurig Dr Pepper Product Facts",
+    "accessed_on": "2026-09-26",
+    "scope": "variant",
+    "serving": "12 fl oz",
+    "ingredients": "CARBONATED WATER, HIGH FRUCTOSE CORN SYRUP. Contains less than 2% of: CARAMEL COLOR, NATURAL AND ARTIFICIAL FLAVORS, SODIUM BENZOATE (PRESERVATIVE), PHOSPHORIC ACID, CAFFEINE, SODIUM PHOSPHATE.",
+    "calories": 150,
+    "total_sugar_g": 39,
+    "added_sugar_g": 39,
+    "sodium_mg": 55,
+    "caffeine_mg": 41,
+    "front_label_claims": null,
+    "notes": "Official US product-facts data for Dr Pepper® Blackberry Flavored Soda - 12 fl oz - US, record a0eWP000000sWfdYAE; active on access. Ordered ingredient labels transcribed from ingredients and otherIngredients arrays. The site's pfProductService UI inserts 'Contains less than 2% of:' before otherIngredients; punctuation between arrays normalized. Public product page: https://www.kdpproductfacts.com/product/a0eWP000000sWfdYAE . This is regular packaged soda, not Zero Sugar or fountain; exact UPC/package version not verified. Product variations also list 20 fl oz, but nutrition here is for 12 fl oz only.",
+    "observed_sizes": [
+      "12 fl oz",
+      "20 fl oz"
+    ]
+  }
+]

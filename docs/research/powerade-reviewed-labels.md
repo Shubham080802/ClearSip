@@ -1,5 +1,13 @@
 # Powerade reviewed label batch
 
+**Superseded scope correction (2026-09-26):** The manufacturer lists available
+bottle sizes separately from its 12 fl oz nutrition serving and 28 fl oz
+container text. This does not verify the legacy 20 fl oz SQL records as exact
+package matches. The UI now uses `reviewed-labels-core.json` at variant scope;
+its Orange statement also corrects the earlier flavor wording to **natural
+flavors**. See [the current core audit](core-label-audit.md). The original
+batch description below is retained as historical context, not certification.
+
 Reviewed on 2026-09-26 for the United States, using Powerade's first-party
 [product page](https://www.powerade.com/products/powerade).
 
