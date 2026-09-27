@@ -43,6 +43,15 @@
               <button type="submit">Check label <span aria-hidden="true">→</span></button>
             </form>
             <div class="quick-search" aria-label="Example searches"><button type="button" data-drink="Coca-Cola Zero Sugar">Coca-Cola Zero Sugar</button><button type="button" data-drink="Monster Energy Zero Sugar">Monster Zero Sugar</button></div>
+            <form id="package-picker" class="package-picker hidden" aria-labelledby="package-picker-heading">
+              <h3 id="package-picker-heading">Choose your drink and size</h3>
+              <div class="package-fields">
+                <div><label for="drink-variant">Drink / flavor</label><select id="drink-variant" required></select></div>
+                <div><label for="drink-size">Package size</label><select id="drink-size" required disabled><option value="">Choose a drink first</option></select></div>
+              </div>
+              <p id="package-hint" aria-live="polite">Choose the size printed on your can or bottle.</p>
+              <button id="package-submit" type="submit" disabled>Show this size →</button>
+            </form>
             <div class="scan-options" aria-label="Other ways to identify a beverage">
               <button id="camera-button" class="scan-option scan-option-primary" type="button"><span class="scan-icon">◫</span><span><b>Scan with camera</b><small>Point at a product label</small></span><i>→</i></button>
               <label class="scan-option"><input id="image-input" type="file" accept="image/*" /><span class="scan-icon">▧</span><span><b>Choose a photo</b><small>Image or screenshot · up to 12 MB</small></span><i>→</i></label>

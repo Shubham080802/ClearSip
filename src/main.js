@@ -1,10 +1,12 @@
 import { createWorker } from "tesseract.js";
-import { dataVersion, findDrink } from "./data.js";
-import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary } from "./catalog-api.js";
+import { dataVersion, findDrink, drinks } from "./data.js";
+import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary, getCatalogProducts, getCatalogProduct, normalizeName } from "./catalog-api.js";
+import { buildPackageChoices } from "./package-options.js";
 import { resetCaptureButton, setCaptureProcessing } from "./camera-ui.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import "./style.css";
 import "./camera.css";
+import "./package-picker.css";
 
 const form = document.querySelector("#search-form");
 const query = document.querySelector("#drink-query");
@@ -24,6 +26,13 @@ const emptyState = document.querySelector("#empty-state");
 const reviewedCount = document.querySelector("#catalog-reviewed-count");
 const discoveryCount = document.querySelector("#catalog-discovery-count");
 const discoveryList = document.querySelector("#discovery-list");
+const packagePicker = document.querySelector("#package-picker");
+const variantSelect = document.querySelector("#drink-variant");
+const sizeSelect = document.querySelector("#drink-size");
+const packageSubmit = document.querySelector("#package-submit");
+const packageHint = document.querySelector("#package-hint");
+let packageChoices = [];
+let selectionRevision = 0;
 let cameraStream = null;
 const OCR_TIMEOUT_MS = 45_000;
 
@@ -39,8 +48,8 @@ function showResult(drink, matchedFrom = "typed search") {
   const facts = drink.facts.map((fact) => `<li><span>${escapeHtml(fact.label)}</span><strong>${escapeHtml(fact.value)}</strong></li>`).join("");
   const ingredients = drink.ingredients.map((ingredient) => `<article class="ingredient ${ingredient.status}"><div class="ingredient-top"><div><p class="ingredient-role">${escapeHtml(ingredient.role)}</p><h3>${escapeHtml(ingredient.name)}</h3></div><span>${statusLabels[ingredient.status]}</span></div><p>${escapeHtml(ingredient.context)}</p>${ingredient.evidence ? `<a href="${ingredient.evidence.url}" target="_blank" rel="noreferrer">Read source ↗</a>` : ""}</article>`).join("");
   result.innerHTML = `
-    <div class="result-heading"><div><p class="eyebrow">MATCHED FROM ${escapeHtml(matchedFrom).toUpperCase()}</p><h2>${escapeHtml(drink.name)}</h2><p>${escapeHtml(drink.region)} formulation · ${escapeHtml(drink.serving)}</p></div><span class="verified">Dataset ${escapeHtml(drink.dataVersion || dataVersion)}</span></div>
-    <div class="summary-grid"><section class="facts"><h3>At a glance</h3><ul>${facts}</ul></section><section class="takeaway"><p class="eyebrow">LABEL SCREEN</p><h3>${escapeHtml(drink.assessment.title)}</h3><p>${escapeHtml(drink.assessment.context)}</p></section></div>
+    <div class="result-heading"><div><p class="eyebrow">MATCHED FROM ${escapeHtml(matchedFrom).toUpperCase()}</p><h2>${escapeHtml(drink.name)}</h2><p>${escapeHtml(drink.region)}${drink.package ? ` · Package: ${escapeHtml(drink.package)}` : ""}</p><p>Nutrition per listed serving: ${escapeHtml(drink.serving)}</p></div><span class="verified">Dataset ${escapeHtml(drink.dataVersion || dataVersion)}</span></div>
+    <div class="summary-grid"><section class="facts"><h3>Per listed serving</h3><ul>${facts}</ul></section><section class="takeaway"><p class="eyebrow">LABEL SCREEN</p><h3>${escapeHtml(drink.assessment.title)}</h3><p>${escapeHtml(drink.assessment.context)}</p></section></div>
     <div class="source-line"><strong>Package source:</strong> <a href="${drink.source.url}" target="_blank" rel="noreferrer">${escapeHtml(drink.source.title)} ↗</a> <span>${escapeHtml(drink.source.note)}</span></div>
     <div class="ingredient-heading"><div><p class="eyebrow">INGREDIENT BY INGREDIENT</p><h2>What the label tells us</h2></div><p>“Worth watching” signals a possible intake or sensitivity consideration—not that an ingredient is inherently unsafe.</p></div>
     <div class="ingredient-grid">${ingredients}</div>
@@ -48,18 +57,20 @@ function showResult(drink, matchedFrom = "typed search") {
   result.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function showDiscoveryResult(drink, matchedFrom = "typed search") {
+function showDiscoveryResult(drink, matchedFrom = "typed search", selectedSize = "") {
   emptyState.classList.add("hidden");
   result.classList.remove("hidden");
   const packageSizes = drink.observed_package_sizes || "No package-size evidence has been recorded yet.";
   const status = drink.verification_status === "needs_package_verification" ? "Needs package-label verification" : "Source-backed discovery candidate";
   result.innerHTML = `
-    <div class="result-heading"><div><p class="eyebrow">MATCHED FROM ${escapeHtml(matchedFrom).toUpperCase()}</p><h2>${escapeHtml(drink.variant_name)}</h2><p>${escapeHtml(drink.market)} · ${escapeHtml(drink.category)}</p></div><span class="verified">DISCOVERY RECORD</span></div>
+    <div class="result-heading"><div><p class="eyebrow">MATCHED FROM ${escapeHtml(matchedFrom).toUpperCase()}</p><h2>${escapeHtml(drink.variant_name)}</h2><p>${escapeHtml(drink.market)} · ${escapeHtml(drink.category)}</p>${selectedSize ? `<p>Selected package: ${escapeHtml(selectedSize)}</p>` : ""}</div><span class="verified">DISCOVERY RECORD</span></div>
     <section class="discovery-result-card"><p class="eyebrow">WHAT WE CAN CONFIRM</p><h3>This product is in the source-backed discovery catalog, but an exact package label has not been reviewed yet.</h3><dl><div><dt>Manufacturer</dt><dd>${escapeHtml(drink.manufacturer_name)}</dd></div><div><dt>Available size evidence</dt><dd>${escapeHtml(packageSizes)}</dd></div><div><dt>Review status</dt><dd>${escapeHtml(status)}</dd></div></dl><p>ClearSip intentionally does not guess ingredients, nutrition facts, or health context until a specific US package label is attached.</p><a href="${escapeHtml(safeExternalUrl(drink.source_url))}" target="_blank" rel="noreferrer">Check the public source ↗</a></section>`;
   result.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function handleQuery(raw, origin = "typed search") {
+  selectionRevision++;
+  packagePicker.classList.add("hidden");
   let drink = null;
   const gtin = raw.replace(/\D/g, "");
   if ([8, 12, 13, 14].includes(gtin.length)) {
@@ -140,11 +151,104 @@ async function loadCatalogDiscoveries() {
 loadCatalogSummary();
 loadCatalogDiscoveries();
 
-form.addEventListener("submit", async (event) => { event.preventDefault(); await handleQuery(query.value); });
+function clearSelectionResult() {
+  selectionRevision++;
+  result.classList.add("hidden");
+}
+
+function populateSizes() {
+  clearSelectionResult();
+  const group = variantSelect.value === "" ? null : packageChoices[Number(variantSelect.value)];
+  sizeSelect.replaceChildren(new Option(group ? "Choose package size" : "Choose a drink first", ""));
+  sizeSelect.disabled = !group;
+  packageSubmit.disabled = true;
+  packageHint.textContent = "Choose the size printed on your can or bottle. Label details are available only for the sizes marked below.";
+  group?.options.forEach((option, index) => {
+    sizeSelect.add(new Option(`${option.label}${option.packageId || option.localDrink ? " — label available" : " — label awaiting review"}`, String(index)));
+  });
+}
+
+async function searchPackageChoices(raw) {
+  const revision = ++selectionRevision;
+  packagePicker.classList.add("hidden");
+  result.classList.add("hidden");
+  const term = raw.trim();
+  if (term.length < 2) {
+    scanStatus.textContent = "Enter at least two characters of the drink name.";
+    return;
+  }
+  // A barcode already identifies a package; it does not need a size picker.
+  if (/^\d{8}$|^\d{12,14}$/.test(term)) return handleQuery(term);
+  scanStatus.textContent = "Finding drinks and available sizes…";
+  const alias = drinks.find((drink) => [drink.name, ...drink.aliases].some((name) => normalizeName(name) === normalizeName(term)));
+  const searchTerm = alias?.name || term;
+  const responses = await Promise.allSettled([getCatalogProducts(searchTerm), getCatalogDiscoveries(searchTerm)]);
+  if (revision !== selectionRevision) return;
+  packageChoices = buildPackageChoices(
+    responses[0].status === "fulfilled" ? responses[0].value : [],
+    responses[1].status === "fulfilled" ? responses[1].value : [],
+  );
+  if (!packageChoices.length && alias) {
+    packageChoices = [{ name: alias.name, market: alias.region, options: [{
+      label: alias.id === "coca-cola-zero-sugar" ? "12 fl oz can" : "16 fl oz can",
+      localDrink: alias,
+    }] }];
+  }
+  if (!packageChoices.length) {
+    scanStatus.textContent = responses.some((response) => response.status === "rejected")
+      ? "The catalog is temporarily unavailable. Please try again."
+      : "No drink found. Try its brand and flavor name.";
+    emptyState.classList.remove("hidden");
+    return;
+  }
+  variantSelect.replaceChildren(new Option("Choose a drink / flavor", ""));
+  packageChoices.forEach((group, index) => variantSelect.add(new Option(`${group.name} · ${group.market}`, String(index))));
+  if (packageChoices.length === 1) variantSelect.value = "0";
+  populateSizes();
+  emptyState.classList.add("hidden");
+  packagePicker.classList.remove("hidden");
+  scanStatus.textContent = responses.some((response) => response.status === "rejected")
+    ? "Some size information could not load. Showing the available results." : "";
+  (packageChoices.length === 1 ? sizeSelect : variantSelect).focus();
+}
+
+query.addEventListener("input", () => {
+  clearSelectionResult();
+  packagePicker.classList.add("hidden");
+  scanStatus.textContent = "";
+});
+variantSelect.addEventListener("change", populateSizes);
+sizeSelect.addEventListener("change", () => {
+  clearSelectionResult();
+  packageSubmit.disabled = sizeSelect.value === "";
+  packageHint.textContent = "Select Show this size to open its available information.";
+});
+packagePicker.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (variantSelect.value === "" || sizeSelect.value === "") return;
+  const option = packageChoices[Number(variantSelect.value)]?.options[Number(sizeSelect.value)];
+  if (!option) return;
+  const revision = ++selectionRevision;
+  packageSubmit.disabled = true;
+  packageHint.textContent = "Loading your selected package…";
+  try {
+    const drink = option.packageId ? await getCatalogProduct(option.packageId) : option.localDrink;
+    if (revision !== selectionRevision) return;
+    if (drink) showResult({ ...drink, package: option.label }, "drink and size selection");
+    else showDiscoveryResult(option.discovery, "drink and size selection", option.label);
+    packageHint.textContent = drink ? "Showing your selected package. Nutrition values below are per listed serving." : "This size is listed in the source; its package label is awaiting review.";
+  } catch (error) {
+    if (revision === selectionRevision) packageHint.textContent = "This package could not load. Please try again.";
+  } finally {
+    if (revision === selectionRevision) packageSubmit.disabled = false;
+  }
+});
+
+form.addEventListener("submit", async (event) => { event.preventDefault(); await searchPackageChoices(query.value); });
 document.querySelectorAll("[data-drink]").forEach((button) => {
   button.addEventListener("click", async () => {
     query.value = button.dataset.drink;
-    await handleQuery(query.value, "quick search");
+    await searchPackageChoices(query.value);
   });
 });
 

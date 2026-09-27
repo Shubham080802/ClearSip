@@ -1,0 +1,32 @@
+import assert from "node:assert/strict";
+import { buildPackageChoices, parsePackageSizes } from "../src/package-options.js";
+import { getCatalogProduct, toDisplayProduct } from "../src/catalog-api.js";
+
+const grape = { id: "grape", variant_name: "Powerade Grape", beverage_family_name: "Powerade", market: "United States", package_size_scope: "variant", observed_package_sizes: "20, 28 fl oz" };
+const reviewed = { id: "grape-20", display_name: "Powerade Grape", market: "United States", package_description: "20 fl oz bottle" };
+const groups = buildPackageChoices([reviewed], [grape, { ...grape, id: "orange", variant_name: "Powerade Orange" }]);
+assert.equal(groups.length, 2, "flavors must remain separate");
+assert.deepEqual(groups[0].options.map((option) => option.label), ["20 fl oz bottle", "28 fl oz"]);
+assert.equal(groups[0].options[0].packageId, "grape-20");
+assert.equal(groups[0].options[1].packageId, undefined, "28 oz must not reuse the 20 oz label");
+assert.equal(groups[0].options[1].discovery, grape);
+assert.deepEqual(parsePackageSizes({ ...grape, observed_package_sizes: "7.5, 12 fl oz; 1.25, 2 L" }), ["7.5 fl oz", "12 fl oz", "1.25 L", "2 L"]);
+assert.deepEqual(parsePackageSizes({ ...grape, observed_package_sizes: "31 fl oz bottle; 6 fl oz concentrate makes 12 fl oz prepared" }), ["31 fl oz bottle"]);
+assert.deepEqual(parsePackageSizes({ ...grape, observed_package_sizes: "8 fl oz can (237 mL)" }), ["8 fl oz can"]);
+assert.deepEqual(parsePackageSizes({ ...grape, package_size_scope: "family" }), []);
+assert.deepEqual(parsePackageSizes({ ...grape, package_size_scope: "unknown", observed_package_sizes: "12 fl oz serving stated for formula family" }), []);
+assert.equal(buildPackageChoices([], [{ ...grape, observed_package_sizes: null }])[0].options.length, 1);
+assert.equal(buildPackageChoices([reviewed, { ...reviewed, id: "grape-28", package_description: "28 fl oz bottle" }], [grape])[0].options.length, 2);
+assert.equal(buildPackageChoices([reviewed], [{ ...grape, market: "Canada" }]).length, 2, "markets must not merge");
+assert.equal(buildPackageChoices([], [{ ...grape, beverage_family_name: "Pepsi", variant_name: "Diet Pepsi" }])[0].name, "Diet Pepsi");
+assert.equal(buildPackageChoices([], [{ ...grape, beverage_family_name: "Ocean Spray Diet", variant_name: "Diet Cranberry" }])[0].name, "Ocean Spray Diet Cranberry");
+let requested;
+const product = await getCatalogProduct("grape-28", async (url) => {
+  requested = url;
+  return { ok: true, json: async () => ({ name: "Powerade Grape", package: "28 fl oz bottle", serving: "12 fl oz", calories: 80 }) };
+});
+assert.equal(requested, "/api/products/grape-28", "fetch the exact selected package");
+assert.equal(product.package, "28 fl oz bottle");
+assert.equal(product.serving, "12 fl oz");
+assert.equal(toDisplayProduct({ calories: 80, package: "28 fl oz bottle", serving: "12 fl oz" }).facts[0].value, "80", "do not scale serving facts to package size");
+console.log("package size selection tests passed");

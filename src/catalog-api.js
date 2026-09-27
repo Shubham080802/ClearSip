@@ -46,6 +46,7 @@ export function toDisplayProduct(product) {
     id: product.id,
     name: product.name,
     region: product.market || "Market not specified",
+    package: product.package || "Package size not specified",
     serving: product.serving || product.package || "Package size not specified",
     facts,
     assessment: {
@@ -80,6 +81,16 @@ async function fetchJson(path, fetchFn) {
   const response = await fetchFn(`${API_BASE}${path}`, { headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error(`Catalog request failed with ${response.status}`);
   return response.json();
+}
+
+export async function getCatalogProducts(query, fetchFn = fetch) {
+  const trimmed = query.trim().slice(0, 120);
+  if (normalizeName(trimmed).length < 2) return [];
+  return fetchJson(`/products?query=${encodeURIComponent(trimmed)}`, fetchFn);
+}
+
+export async function getCatalogProduct(packageId, fetchFn = fetch) {
+  return toDisplayProduct(await fetchJson(`/products/${encodeURIComponent(packageId)}`, fetchFn));
 }
 
 export function getCatalogSummary(fetchFn = fetch) {

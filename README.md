@@ -112,6 +112,8 @@ available only for the voluntary voice-search feature.
 
 ## Data safety and provenance
 
+Name searches let the user choose a drink/flavor and package size before opening a result. Sizes with a label load that exact package; sizes known only from a discovery source show the review status. Nutrition values remain per listed serving, with the package size shown separately. Serving-size and concentrate-preparation notes are not offered as package sizes.
+
 The seed dataset is intentionally small. See [the research note](docs/research/seed-data-sources.md) before adding records. In particular:
 
 - Use a manufacturer product page, manufacturer label PDF, or the package itself as the product source; a retailer transcription is only a provisional lead.

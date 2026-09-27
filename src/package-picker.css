@@ -1,0 +1,11 @@
+.package-picker { margin:0 0 20px; padding:20px; border:1px solid #c9c5e6; border-radius:12px; background:#f4f2ff; }
+.package-picker h3 { margin:0 0 16px; font-size:17px; }
+.package-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.package-fields > div { min-width:0; }
+.package-fields label { min-width:0; color:#444967; font-size:12px; font-weight:700; }
+.package-fields select { display:block; width:100%; min-height:44px; margin-top:6px; padding:10px; border:1px solid #bdbbd2; border-radius:8px; background:#fff; color:var(--navy); font:inherit; }
+.package-fields select:focus-visible, .package-picker button:focus-visible { outline:3px solid #7279d6; outline-offset:2px; }
+.package-picker p { margin:12px 0; color:var(--muted); font-size:12px; line-height:1.5; }
+.package-picker button { min-height:44px; padding:10px 16px; border:0; border-radius:8px; background:var(--lime); color:var(--navy); font-weight:700; }
+.package-picker button:disabled { opacity:.5; cursor:not-allowed; }
+@media(max-width:560px) { .package-fields { grid-template-columns:1fr; } .package-picker button { width:100%; } }
