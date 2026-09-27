@@ -3,7 +3,7 @@
 ## Completed — make the existing product real
 
 1. **FastAPI catalog lookup.** The UI reads versioned package records from `/api`, displays source/package/review information, and retains a small local fallback only when the API is unavailable.
-2. **Honest discovery coverage.** Users can browse and search 85 source-backed candidates across 23 categories, including a packaged-coffee starter batch and diverse juice, energy, water, sparkling-water, oat-beverage, and functional-soda records. Discovery results deliberately withhold ingredient and health panels until a package label is reviewed.
+2. **Honest discovery coverage.** Users can browse and search 85 source-backed entries. Manufacturer ingredient panels are available for 79; six remain pending before size selection. Variant information is explicitly distinguished from exact-package verification, with nutrition per the source serving.
 3. **Public Vercel deployment.** The public GitHub repository deploys to Vercel with a managed PostgreSQL database, immutable schema migrations, and production-safe static/API routing.
 4. **Automated checks.** Client, API, migration, and FDC-import smoke checks run in CI.
 5. **Input and browser safeguards.** OCR and live camera capture stay in the browser; image/video sizes are bounded, content security headers are active, and camera/microphone access is requested only for voluntary scan/search actions.

@@ -1,156 +1,200 @@
 # ClearSip
 
-ClearSip is an early, educational beverage-label awareness app. A user can type a product name, scan a label image, scan a frame from a video, or say a drink name. The app matches a versioned dataset and explains each declared ingredient in plain language, with source links and clear uncertainty.
+### Know what’s in your next sip.
 
-## What is in this MVP
+A source-backed beverage-label explorer for the US market. Search a drink, choose
+a package size, or scan a label to see declared ingredients, nutrition facts,
+and plain-language context—with the source and uncertainty kept visible.
 
-- API-backed text lookup against the versioned local SQL catalog, with reviewed seed-label fallback when the API is unavailable
-- Local, in-browser OCR for a product image and a selected video frame
-- Browser-native speech recognition for a spoken drink name
-- Product facts separated from interpretive context
-- Ingredient roles, amount/context caveats, FDA sources, source dates, and formulation-region notes
-- A research note documenting approved sources and health-language guardrails
+[![Verify ClearSip](https://github.com/Shubham080802/ClearSip/actions/workflows/verify.yml/badge.svg)](https://github.com/Shubham080802/ClearSip/actions/workflows/verify.yml)
+[![Code license: MIT](https://img.shields.io/badge/Code_license-MIT-blue.svg)](LICENSE)
 
-## Architecture
+[Live demo](https://clear-sip-gules.vercel.app/) · [Report an issue](https://github.com/Shubham080802/ClearSip/issues) · [Data audit](docs/research/catalog-availability-audit.md) · [Licensing](LICENSE_SCOPE.md)
 
-```text
-Chrome browser UI  →  FastAPI `/api`  →  PostgreSQL (production)
-       │                    │
-       └── OCR / voice      └── SQLite (local-only development)
-```
+> Educational information, not medical advice. ClearSip explains disclosed label
+> facts; it does not detect undisclosed chemicals, certify a product’s safety, or
+> assign a universal “healthy/unhealthy” score.
 
-- The frontend is a small Vite application. It stays browser-first for scanning and voice capture.
-- [`api/index.py`](api/index.py) exports the FastAPI app that Vercel can deploy as a Python Function.
-- [`data/schema.sql`](data/schema.sql) is the relational source of truth for products, ingredients, and their product-specific assessments.
-- The catalog keeps **manufacturer → beverage family → variant/flavor → market-specific package → dated label version** separate. A 12 oz can and a 20 oz bottle are never silently treated as one item.
-- SQLite is deliberately local-only. Vercel functions have no durable local disk, so production must receive a PostgreSQL `DATABASE_URL` from a managed provider.
-- Dated `data/reviewed-labels-*.json` snapshots supplement SQL with manufacturer **variant-level** ingredient panels. They ship with the Python function and never certify all sizes as exact package matches. Unknown nutrient amounts remain null.
+## Contents
 
-## Run locally
+- [Features](#features)
+- [Catalog coverage](#catalog-coverage)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Project structure](#project-structure)
+- [Data and privacy](#data-and-privacy)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
 
-For the API, local SQL seed, and browser app:
+## Features
+
+- **Name and size lookup:** choose a drink/flavor and an available package size.
+- **Camera and media input:** capture a label, upload an image, or read one frame from a video using browser-side OCR.
+- **Voice search:** speak a drink name in browsers that support speech recognition.
+- **Typed barcode lookup:** resolve known UPC/EAN/GTIN values to catalog packages.
+- **Ingredient explanations:** full available ingredient statements, selected ingredient roles, nutrition, and disclosed-claim context.
+- **Visible evidence:** manufacturer sources, dates, unknown amounts, and distinct variant-versus-package scope.
+
+Camera input reads visible text; it is not continuous object recognition.
+An exact flavor or package may still require manual selection.
+
+## Catalog coverage
+
+Snapshot: **September 26, 2026**. Check the app or [coverage API](https://clear-sip-gules.vercel.app/api/catalog-coverage) for current counts.
+
+| Coverage | Count |
+| --- | ---: |
+| US catalog entries | 85 |
+| Entries with manufacturer ingredient panels | 79 |
+| Entries awaiting complete ingredient evidence | 6 |
+| Existing SQL package-label records | 5 |
+
+Package records overlap with catalog entries; these counts are **not additive**.
+A manufacturer variant panel does not verify every bottle size. Nutrition remains
+per the source’s stated serving, not automatically the selected container.
+
+Coverage includes soda, sports and energy drinks, coffee, water, sparkling water,
+juice, oat beverages, and functional soda. Pending entries are identified before
+selection rather than opening an empty ingredient explanation.
+See the [complete audit and sources](docs/research/catalog-availability-audit.md).
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | JavaScript, HTML/CSS, Vite |
+| Label OCR | Tesseract.js, browser camera/media APIs |
+| API | Python, FastAPI |
+| Database | PostgreSQL in production; SQLite for local development |
+| Hosting | Vercel |
+| Checks | GitHub Actions, Python smoke checks, Node.js tests |
+
+The SQL model separates manufacturer → family → flavor → market-specific package
+→ dated label. Curated manufacturer snapshots supplement it without turning a
+variant source into an exact-package certification.
+
+## Getting started
+
+Use **Node.js 22** and **Python 3.12+**. CI currently runs Python 3.14.
+The commands below are for macOS/Linux.
+
+### 1. Clone and install
 
 ```bash
+git clone https://github.com/Shubham080802/ClearSip.git
+cd ClearSip
+npm ci
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+```
+
+### 2. Initialize local data and start the API
+
+**Warning:** bootstrap recreates `data/clearsip.db`. Use it only with disposable
+local development data. Back up any local work you need to keep first.
+
+```bash
 .venv/bin/python scripts/bootstrap_db.py
 .venv/bin/uvicorn api.index:app --reload
-npm install
+```
+
+### 3. Start the frontend in a second terminal
+
+From the same repository directory:
+
+```bash
 npm run dev
 ```
 
-The API is available at `http://127.0.0.1:8000/api/health` and its interactive docs at `http://127.0.0.1:8000/docs`. Vite proxies `/api` to that local server, so the browser application reads the same catalog that will be deployed on Vercel. For a production check, run `npm run build`.
+Open [localhost:5173](http://localhost:5173). Vite forwards `/api` requests to
+the local API. Explore the API at [localhost:8000/docs](http://localhost:8000/docs).
+No API key is required for the bundled local catalog.
 
-### Production database migrations
-
-[`migrations/`](migrations) is the immutable production schema history. Apply
-it as a separate deployment step using the Production `DATABASE_URL`; it is
-idempotent, verifies the checksum of every already-applied migration, and
-uses a PostgreSQL advisory lock to prevent simultaneous deploys from racing.
+## Testing
 
 ```bash
-DATABASE_URL=postgresql://... .venv/bin/python scripts/migrate_db.py
+npm run test:client
+npm run build
+.venv/bin/python tests/api_smoke.py
+.venv/bin/python tests/catalog_coverage.py
+CLEARSIP_TEST_PYTHON=.venv/bin/python node tests/catalog-coverage.test.mjs
+.venv/bin/python tests/import_fdc_smoke.py
 ```
 
-Never run `scripts/bootstrap_db.py` against production: it deliberately drops
-and recreates the local development database. Add a new numbered migration for
-each production schema change; never edit an applied migration.
+The API smoke test rebuilds the disposable local database. Catalog checks cover
+every catalog entry and parsed size choice, including missing-label cases.
+GitHub Actions also checks repeatable database migrations.
 
-### Label assessment and dataset refresh
+## Deployment
 
-Each current package label receives a transparent assessment of the disclosed
-facts: added sugar, saturated fat, sodium, caffeine context, and any visible
-`Zero Sugar` / `sugar-free`, `preservative-free`, or `healthy` claim. It does
-not assign a universal "healthy" or "unhealthy" label, make a disease claim,
-or certify legal compliance. The full rules and language safeguards are in
-[the classification policy](docs/research/beverage-classification-policy.md).
+The live application deploys from GitHub to Vercel with a managed PostgreSQL
+database. `vercel.json` routes the static frontend and Python API.
 
-Recalculate all local assessments after changing labels or rules:
+Set the server-side `DATABASE_URL` in Vercel and apply the versioned migrations;
+do not run the local bootstrap against production or rely on local SQLite
+persistence inside a serverless function.
 
-```bash
-.venv/bin/python scripts/rebuild_assessments.py
+See the [development and deployment guide](docs/DEVELOPMENT.md) for configuration,
+migrations, catalog refreshes, and the Chrome-first workflow.
+
+## Project structure
+
+```text
+ClearSip/
+├── api/                    # FastAPI, database access, assessments, source panels
+├── src/                    # Browser UI, OCR, lookup, and package selection
+├── data/                   # SQL schema and dated manufacturer snapshots
+├── migrations/             # Immutable production schema migrations
+├── scripts/                # Bootstrap, imports, audits, and maintenance
+├── tests/                  # Client, API, catalog, and importer checks
+├── docs/                   # Research, architecture, and operating guides
+├── .github/workflows/      # Verification and manual catalog refresh
+├── index.html              # Application entry
+├── vercel.json             # Deployment routes and security headers
+└── LICENSE                 # MIT license for original code and documentation
 ```
 
-For a focused, reviewable USDA FoodData Central Branded Foods discovery import,
-provide a personal Data.gov API key (never commit it):
+## Data and privacy
 
-```bash
-FDC_API_KEY=your-key .venv/bin/python scripts/import_fdc.py --query "Pepsi Zero Sugar" --page-size 20
-```
+- Every source-backed result retains provenance; missing nutrient amounts stay unknown.
+- Source availability does not imply permission to redistribute manufacturer content. Read [data rights and license scope](LICENSE_SCOPE.md).
+- Images, video frames, and camera captures are processed in the browser and are not uploaded to ClearSip’s API or retained by the app.
+- Voice recognition is browser-dependent and may use the browser vendor’s remote service; do not assume it is on-device.
+- The browser contacts third-party font/OCR resource hosts. This is not a claim of zero network traffic.
+- OCR, source data, and labels can be incomplete or outdated. Always compare with the current package.
 
-`--demo` is only suitable for tiny local experiments. The importer rejects
-non-beverage categories, retains the raw FDC ingredient statement and ID, and
-marks records `catalog_label_match`; it never turns an FDC search hit into a
-package-verified label. Use the offline FDC Branded Foods release in a worker
-for a nationwide backfill, not a Vercel request.
+Read the [classification policy](docs/research/beverage-classification-policy.md)
+for how label facts, interpretation, and uncertainty are kept separate.
 
-### Controlled cloud catalog refresh
+## Roadmap
 
-The **Refresh FoodData Central catalog** GitHub Action is intentionally manual.
-Before its first run, add these GitHub repository secrets in the browser:
+- Expand coverage through attributable, rights-reviewed data sources.
+- Add reviewer-controlled label updates and a correction/reporting workflow.
+- Improve camera/barcode matching and mobile accessibility.
+- Obtain qualified nutrition/regulatory review before a broader health-focused release.
+- Extend to food products once the beverage workflow is stable.
 
-- `CLEARSIP_DATABASE_URL`: the managed production PostgreSQL connection URL.
-- `FDC_API_KEY`: a Data.gov API key for FoodData Central.
+The [detailed roadmap](docs/ROADMAP.md) distinguishes completed work from planned work.
 
-Then select **Actions → Refresh FoodData Central catalog → Run workflow** and
-enter one focused brand or beverage query. The job applies immutable migrations
-first, imports at most 50 FDC Branded Foods search hits, and recalculates the
-label-only assessments. It does not upload user scans, claim package
-verification, or perform a nationwide backfill.
+## Contributing
 
-## Chrome-first and Vercel workflow
+Open an [issue](https://github.com/Shubham080802/ClearSip/issues) for a bug,
+feature suggestion, or source correction. For code changes, use a focused branch,
+include tests, and describe the expected behavior in your pull request.
 
-Chrome can be your primary working surface: use GitHub's web editor (`github.dev`) for simple source changes, the Vercel dashboard for deployments and environment variables, and Vercel preview URLs to test each pushed commit. The Git repository remains the authoritative source, so browser-made edits should still be committed to GitHub.
+For data changes, include the exact product/flavor, market, source URL, access
+date, serving, and evidence scope. Do not invent missing values, copy proprietary
+marketing assets, or imply source-rights clearance from a public URL. Do not
+include credentials, private scans, or personal information in issues or commits.
 
-ClearSip is deployed from GitHub to Vercel. Its Vite frontend and FastAPI entrypoint are routed in [`vercel.json`](vercel.json), so `/api/*` reaches the Python function while every other path loads the browser app. Add a managed PostgreSQL integration (for example, Neon) and set its injected `DATABASE_URL`; do not use the local SQLite database in production.
+## License
 
-The same configuration sends a restrictive Content Security Policy, blocks framing,
-and disables unneeded browser permissions. The policy permits only the application
-origin plus the Tesseract.js jsDelivr resources needed for browser-only OCR. Camera
-access is available only after a user presses **Scan with camera** and grants the
-browser prompt; the captured frame stays in the browser. The microphone remains
-available only for the voluntary voice-search feature.
+Original ClearSip code and documentation are licensed under the
+[MIT License](LICENSE). Copyright © 2026 Shubham Kumar.
 
-## Data safety and provenance
-
-Name searches let the user choose a drink/flavor and package size before opening a result. Available manufacturer variant panels display the full ingredients, source notes, and nutrition per the manufacturer's stated serving, separately from the selected package size. They are not exact-package certification. Entries without ingredients are marked pending before selection and cannot open an empty explanation. Serving-size and concentrate-preparation notes are not offered as package sizes.
-
-The seed dataset is intentionally small. See [the research note](docs/research/seed-data-sources.md) before adding records. In particular:
-
-- Use a manufacturer product page, manufacturer label PDF, or the package itself as the product source; a retailer transcription is only a provisional lead.
-- Record market, package size, source URL, access date, verification state, and formulation/version with every item.
-- Do not classify ingredients as universally “good,” “bad,” “harmful,” or “beneficial.” Present a label fact, its function, the known quantity, applicable authoritative context, and uncertainty separately.
-- Do not calculate an ADI percentage unless the label or manufacturer actually discloses the ingredient amount.
-- Do not retain user images or videos in this MVP. OCR occurs in the browser and the upload is not sent to an application server.
-- The browser rejects non-media, empty, and oversized scan inputs before OCR (12 MB images and 80 MB videos).
-
-## Nationwide catalog coverage
-
-The goal is **all discoverable, currently sold packaged non-alcoholic beverages in the United States**, not an unprovable claim that every beverage ever produced is included. The lawful nationwide baseline will be USDA FoodData Central's public-domain Branded Foods data, then verified and refreshed with package observations, authorized manufacturer label sources, and licensed barcode/product-data sources where required.
-
-The full acquisition, licensing, and update plan is in [the US beverage catalog research note](docs/research/us-beverage-catalog-sources.md). It establishes these rules:
-
-- FoodData Central provides broad coverage, but manufacturer submissions are voluntary, so every record retains a source and verification state.
-- A GTIN/UPC identifies a **package**, not automatically a formula. GS1-scale lookup needs the appropriate commercial access/licence.
-- Do not bulk-scrape or republish manufacturer pages, product images, logos, or marketing copy. Manufacturer facts are used for review and provenance only where permitted.
-- A Vercel Function is not the place for a nationwide bulk import. Run FoodData Central import/update jobs in a dedicated worker, then connect the resulting PostgreSQL database to Vercel.
-
-### Current catalog status
-
-The SQL catalog has five **package-label records** and 85 **source-backed catalog entries**; these overlap and must not be summed as unique drinks. The September 26 audit adds manufacturer ingredient panels for **79 of the 85 catalog entries**. Six remain pending: Monster Zero Ultra, Red Bull Original, STōK Extra Bold, and the unresolved Snapple, Bai, and LaCroix family placeholders. Unknown or conflicting nutrition amounts remain unavailable. Existing seed records are not all exact-package verified; the current manufacturer panel takes precedence in the UI where available.
-
-See the [all-entry availability audit](docs/research/catalog-availability-audit.md) and its linked manufacturer sources. Run `.venv/bin/python scripts/audit_catalog.py` to audit current SQL discoveries against shipped source panels. `/api/catalog-coverage` reports availability for every entry. CI checks every catalog entry and parsed size, including future missing-label entries, so a new discovery cannot silently become an ingredient explanation.
-
-See [the initial portfolio list](docs/research/initial-us-beverage-portfolio.md) for the beverage families, flavors, package-size evidence, and verification status.
-
-## Remaining work requiring external authority
-
-1. Add `CLEARSIP_DATABASE_URL` and `FDC_API_KEY` as GitHub repository secrets, then use the manual FDC refresh workflow for focused imports. A lawful nationwide backfill requires a separate, reviewable worker and source-release process.
-2. Choose an authentication/reviewer model before adding production write endpoints for discovery → package-reviewed → published states.
-3. Have qualified regulatory and nutrition reviewers approve user-facing assessment language before broad public release.
-4. Choose a support contact channel before adding label-mismatch reporting.
-5. Add food products only after the beverage source/provenance workflow is stable.
-
-## Scope statement
-
-ClearSip provides educational label information, not medical advice. Food suitability can change with allergies, medications, pregnancy, age, health conditions, and total dietary intake.
+**Manufacturer-derived data, third-party assets, dependencies, and trademarks
+are not relicensed under MIT.** See [license scope and data rights](LICENSE_SCOPE.md)
+and [third-party notices](THIRD_PARTY_NOTICES.md).
