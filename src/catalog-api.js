@@ -53,6 +53,7 @@ export function toDisplayProduct(product) {
     ingredientStatement: product.ingredient_statement || "",
     scopeNote: product.scope_note || "",
     serving: product.serving || product.package || "Package size not specified",
+    nutrients: Object.fromEntries(["calories", "total_sugar_g", "added_sugar_g", "saturated_fat_g", "sodium_mg", "caffeine_mg"].map((key) => [key, product[key] ?? null])),
     facts,
     assessment: {
       title: claimTitle(context),

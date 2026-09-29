@@ -35,8 +35,13 @@ and plain-language context—with the source and uncertainty kept visible.
 - **Camera and media input:** capture a label, upload an image, or read one frame from a video using browser-side OCR.
 - **Voice search:** speak a drink name in browsers that support speech recognition.
 - **Typed barcode lookup:** resolve known UPC/EAN/GTIN values to catalog packages.
-- **Ingredient explanations:** full available ingredient statements, selected ingredient roles, nutrition, and disclosed-claim context.
+- **Ingredient body effects:** exact declared component names, their jobs in the drink, general bodily effects, dose limitations, and primary-source links.
+- **Drinking context:** a separate tab for low-sugar goals, casual use, calorie/caffeine awareness, and relevant cautions—not a universal safety score.
 - **Visible evidence:** manufacturer sources, dates, unknown amounts, and distinct variant-versus-package scope.
+
+The [ingredient-effects guide](docs/INGREDIENT_EFFECTS.md) explains the 42-profile
+educational reference and its classification rules. Proprietary flavor blends
+are not guessed, and qualified clinical review remains pending.
 
 Camera input currently reads visible text and suggests catalog matches for
 confirmation; native barcode scanning is used when the browser supports it.

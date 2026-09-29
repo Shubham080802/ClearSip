@@ -9,6 +9,8 @@ import { classifyImage, rankOcrCandidates, mergeCandidates, readBarcode, contrad
 import "./style.css";
 import "./camera.css";
 import "./package-picker.css";
+import { renderIngredientContext, bindResultTabs } from "./result-context.js";
+import "./ingredient-context.css";
 
 const form = document.querySelector("#search-form");
 const query = document.querySelector("#drink-query");
@@ -42,8 +44,6 @@ const recognitionCoverageNote = document.querySelector("#recognition-coverage-no
 let cameraStream = null;
 const OCR_TIMEOUT_MS = 45_000;
 
-const statusLabels = { watch: "Worth watching", context: "Context matters", neutral: "Label context", unknown: "Not fully specified" };
-
 function escapeHtml(value) {
   return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
 }
@@ -52,16 +52,15 @@ function showResult(drink, matchedFrom = "typed search") {
   emptyState.classList.add("hidden");
   result.classList.remove("hidden");
   const facts = drink.facts.map((fact) => `<li><span>${escapeHtml(fact.label)}</span><strong>${escapeHtml(fact.value)}</strong></li>`).join("");
-  const ingredients = drink.ingredients.map((ingredient) => `<article class="ingredient ${ingredient.status}"><div class="ingredient-top"><div><p class="ingredient-role">${escapeHtml(ingredient.role)}</p><h3>${escapeHtml(ingredient.name)}</h3></div><span>${statusLabels[ingredient.status]}</span></div><p>${escapeHtml(ingredient.context)}</p>${ingredient.evidence ? `<a href="${ingredient.evidence.url}" target="_blank" rel="noreferrer">Read source ↗</a>` : ""}</article>`).join("");
   result.innerHTML = `
     <div class="result-heading"><div><p class="eyebrow">MATCHED FROM ${escapeHtml(matchedFrom).toUpperCase()}</p><h2>${escapeHtml(drink.name)}</h2><p>${escapeHtml(drink.region)}${drink.package ? ` · Package: ${escapeHtml(drink.package)}` : ""}</p><p>Nutrition per listed serving: ${escapeHtml(drink.serving)}</p></div><span class="verified">Dataset ${escapeHtml(drink.dataVersion || dataVersion)}</span></div>
     ${drink.scopeNote ? `<p class="source-scope">${escapeHtml(drink.scopeNote)}</p>` : ""}
     <div class="summary-grid"><section class="facts"><h3>Per listed serving</h3>${facts ? `<ul>${facts}</ul>` : "<p>Nutrition amounts are not provided in this source record. See the declared ingredients below.</p>"}</section><section class="takeaway"><p class="eyebrow">LABEL SCREEN</p><h3>${escapeHtml(drink.assessment.title)}</h3><p>${escapeHtml(drink.assessment.context)}</p></section></div>
     <div class="source-line"><strong>Label information source:</strong> <a href="${escapeHtml(safeExternalUrl(drink.source.url))}" target="_blank" rel="noreferrer">${escapeHtml(drink.source.title)} ↗</a> <span>${escapeHtml(drink.source.note)}</span></div>
     ${drink.ingredientStatement ? `<section class="ingredient-statement"><h3>Full declared ingredient list</h3><p>${escapeHtml(drink.ingredientStatement)}</p></section>` : ""}
-    ${ingredients ? `<div class="ingredient-heading"><div><p class="eyebrow">INGREDIENT CONTEXT</p><h2>What the label tells us</h2></div><p>These notes cover selected declared ingredients or groups. They do not establish personal safety or an undisclosed ingredient amount.</p></div>` : ""}
-    <div class="ingredient-grid">${ingredients}</div>
+    ${renderIngredientContext(drink)}
     <aside class="disclaimer"><strong>Important:</strong> This is educational context, not a diagnosis or personalized medical advice. Ask a qualified clinician about pregnancy, health conditions, medications, allergies, or individual dietary needs.</aside>`;
+  bindResultTabs(result);
   result.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 

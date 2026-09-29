@@ -10,6 +10,7 @@ export const drinks = [
     region: "United States",
     verifiedOn: "2026-09-24",
     serving: "12 fl oz (355 mL)",
+    nutrients: { calories: 0, total_sugar_g: 0, added_sugar_g: 0, sodium_mg: 40, caffeine_mg: 34 },
     facts: [{ label: "Calories", value: "0" }, { label: "Total sugar", value: "0 g" }, { label: "Added sugar", value: "0 g" }, { label: "Sodium", value: "40 mg" }, { label: "Caffeine", value: "34 mg" }],
     assessment: {
       title: "“Zero Sugar” appears aligned with the disclosed label facts.",
@@ -37,6 +38,7 @@ export const drinks = [
     region: "United States",
     verifiedOn: "2026-09-24",
     serving: "16 fl oz (473 mL) can",
+    nutrients: { calories: 10, total_sugar_g: 0, added_sugar_g: 0, sodium_mg: 380, caffeine_mg: 160 },
     facts: [{ label: "Calories", value: "10" }, { label: "Total sugar", value: "0 g" }, { label: "Added sugar", value: "0 g" }, { label: "Sodium", value: "380 mg" }, { label: "Caffeine", value: "160 mg" }],
     assessment: {
       title: "“Zero Sugar” checks the disclosed sugar facts; caffeine still needs context.",

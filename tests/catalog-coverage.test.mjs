@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { buildPackageChoices, hasExplanation } from "../src/package-options.js";
 import { toDisplaySourceLabel } from "../src/catalog-api.js";
+import { buildIngredientContext, parseDeclaredIngredients } from "../src/ingredient-context.js";
+import { renderIngredientContext } from "../src/result-context.js";
 
 // Run after the Python bootstrap in CI. Exercise the complete real catalog
 // through the same option-building and display functions used by the browser.
@@ -23,6 +25,14 @@ for (const row of rows) {
     assert.equal(display.source.url, row.source_label.source_url);
     assert.ok(display.scopeNote.includes("Manufacturer information"));
     assert.ok(display.assessment.context);
+    const effects = buildIngredientContext(display);
+    assert.deepEqual(effects.cards.map((card) => card.name), parseDeclaredIngredients(row.source_label.ingredients), `${row.id}: every declared component stays reachable`);
+    assert.ok(effects.cards.length);
+    assert.ok(effects.contexts.some((context) => context.id === "sugar-goal"));
+    const html = renderIngredientContext(display);
+    assert.ok(html.includes("What these ingredients do"));
+    assert.ok(html.includes("Drinking context"));
+    assert.equal(display.nutrients.total_sugar_g, row.source_label.total_sugar_g ?? null);
   }
 }
 const future = { id:"future", variant_name:"Future flavor", beverage_family_name:"Future", market:"US", observed_package_sizes:"20 fl oz", package_size_scope:"variant" };

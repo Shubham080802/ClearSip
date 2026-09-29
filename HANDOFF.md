@@ -10,6 +10,17 @@ The Vite MVP builds with `npm run build`; it supports text, live browser-camera 
 
 ## Important implementation choices
 
+- Ingredient explanations (2026-09-28): `data/ingredient-effects.json` supplies
+  42 primary-source-backed general/limited profiles, separate from manufacturer
+  facts, with read-only `/api/ingredient-effect-profiles`. `src/ingredient-context.js`
+  preserves declared component names and unknown amounts; `src/result-context.js`
+  renders accessible body-effects and drinking-context tabs. Contexts cover sugar,
+  calories, caffeine, sodium, PKU, milk/soy and dental exposure, not universal diet
+  clearance. Flavor blends remain undisclosed. Qualified clinical review is pending.
+  Current 79-panel audit: 566 top-level component cards, 555 profile matches, 11
+  unreviewed cards; these are explanation-coverage counts, not medical accuracy.
+  See `docs/INGREDIENT_EFFECTS.md` and `docs/research/ingredient-body-effects.md`.
+
 - Camera evaluation is deferred at the user's request (2026-09-28), not waived.
   `scripts/recognition_audit.py --preparation` reports every target's collection
   deficits and source/session groups from approved samples. Training now has an

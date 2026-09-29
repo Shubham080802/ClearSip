@@ -1,0 +1,36 @@
+.result-tablist { display:flex; gap:6px; margin:28px 0 0; padding:6px; border:1px solid #d8d5e4; border-radius:12px; background:#efedf7; }
+.result-tablist button { flex:1; min-width:0; padding:15px 12px; border:0; border-radius:8px; color:#585c76; background:transparent; text-align:left; font:700 14px/1.4 "DM Sans",sans-serif; cursor:pointer; }
+.result-tablist button span { display:block; margin-top:3px; font-size:10px; font-weight:400; }
+.result-tablist button[aria-selected="true"] { color:#fff; background:var(--navy); box-shadow:0 3px 9px #171a3217; }
+.result-tablist button:focus-visible, .effect-evidence summary:focus-visible { outline:3px solid #6e72ce; outline-offset:3px; }
+.result [role="tabpanel"][hidden] { display:none; }
+.context-section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:32px; margin:34px 0 22px; }
+.context-section-heading h2 { max-width:520px; margin:0; font:700 34px/1.1 "Playfair Display",serif; letter-spacing:-1px; }
+.context-section-heading > p { max-width:400px; margin:0; color:var(--muted); font-size:12px; line-height:1.7; }
+.body-ingredient-grid, .drinking-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start; }
+.body-ingredient { min-width:0; padding:22px; border:1px solid #dedce6; border-top:3px solid #8586c6; border-radius:12px; background:#fff; }
+.body-ingredient.limited, .body-ingredient.unreviewed { border-top-color:#a0a3b4; }
+.body-ingredient-heading { display:flex; gap:10px; justify-content:space-between; align-items:start; }
+.body-ingredient-heading .ingredient-role { flex:1; line-height:1.5; }
+.body-ingredient-heading span { color:#676b85; font:500 9px/1.4 "DM Mono",monospace; text-align:right; }
+.body-ingredient h3 { margin:7px 0 18px; font:700 19px/1.35 "DM Sans",sans-serif; overflow-wrap:anywhere; }
+.effect-note { padding-top:12px; border-top:1px solid #eeedf3; }
+.effect-note + .effect-note { margin-top:14px; }
+.effect-note p, .profile-pending { margin:0 0 14px; color:#545b70; font-size:12px; line-height:1.7; }
+.effect-note strong { display:block; margin-bottom:4px; color:#282c50; font-size:11px; }
+.effect-evidence { margin-top:15px; padding-top:13px; border-top:1px solid #e6e4ed; color:#555c70; font-size:11px; line-height:1.7; }
+.effect-evidence summary { color:#41489d; font-weight:700; cursor:pointer; }
+.effect-evidence p { margin:12px 0; }
+.effect-sources { display:grid; gap:7px; }
+.effect-sources a { color:#3d449d; text-decoration:underline; text-underline-offset:3px; overflow-wrap:anywhere; }
+.effect-scope, .context-version { color:#767a8c; font-size:10px; line-height:1.6; }
+.context-version { margin:20px 0; }
+.disclosure-note { padding:10px 12px; background:#f3f2f8; border-radius:6px; }
+.context-boundary { margin:0 0 20px; padding:15px 18px; color:#555d7b; background:#efedf8; border-radius:9px; font-size:12px; line-height:1.7; }
+.drinking-card { min-width:0; padding:23px; border:1px solid #d6d8e4; border-left:4px solid #8288bb; border-radius:12px; background:#fff; }
+.drinking-card.watch { border-left-color:#dc866c; }
+.drinking-card.unknown { border-left-color:#a0a4b1; background:#fafafa; }
+.drinking-card h3 { margin:7px 0 12px; font:700 20px/1.25 "DM Sans",sans-serif; }
+.drinking-card > p:not(.ingredient-role) { margin:0; color:#545b70; font-size:12px; line-height:1.7; }
+@media (max-width:800px) { .context-section-heading { display:block; } .context-section-heading > p { max-width:none; margin-top:14px; } }
+@media (max-width:600px) { .body-ingredient-grid, .drinking-grid { grid-template-columns:1fr; } .result-tablist button { padding:12px 10px; font-size:12px; } .body-ingredient, .drinking-card { padding:19px; } .context-section-heading h2 { font-size:29px; } }
