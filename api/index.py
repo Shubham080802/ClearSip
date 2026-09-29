@@ -9,12 +9,18 @@ from fastapi import FastAPI, HTTPException, Query
 from api.database import connection, placeholder
 from api.source_labels import source_labels, explain_source
 from api.recognition import recognition_summary
+from api.ingredient_effects import ingredient_effect_profiles
 
 app = FastAPI(
     title="ClearSip API",
     version="0.2.0",
     description="Versioned, sourced beverage-label information. Educational only; not medical advice.",
 )
+
+
+@app.get("/api/ingredient-effect-profiles")
+def ingredient_effects_reference() -> dict:
+    return ingredient_effect_profiles()
 
 
 @app.get("/api/recognition-coverage")

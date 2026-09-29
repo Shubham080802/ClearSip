@@ -6,9 +6,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from api.index import catalog_discoveries, catalog_coverage, search_products, product_detail
 from api.source_labels import source_labels
+from api.index import ingredient_effects_reference
 
 rows = catalog_discoveries(limit=500)
 labels = source_labels()
+effects = ingredient_effects_reference()
+assert effects["schema_version"] == 1 and effects["profiles"]
+assert effects["review_status"] and effects["version"]
 assert rows
 assert set(labels).issubset({row["id"] for row in rows})
 for row in rows:

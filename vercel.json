@@ -5,7 +5,7 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python",
-      "config": { "includeFiles": ["data/reviewed-labels-*.json", "public/models/drink-recognizer/release.json"] }
+      "config": { "includeFiles": ["data/reviewed-labels-*.json", "data/ingredient-effects.json", "public/models/drink-recognizer/release.json"] }
     },
     {
       "src": "package.json",
