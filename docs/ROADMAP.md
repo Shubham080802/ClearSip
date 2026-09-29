@@ -7,6 +7,7 @@
 3. **Public Vercel deployment.** The public GitHub repository deploys to Vercel with a managed PostgreSQL database, immutable schema migrations, and production-safe static/API routing.
 4. **Automated checks.** Client, API, migration, and FDC-import smoke checks run in CI.
 5. **Input and browser safeguards.** OCR and live camera capture stay in the browser; image/video sizes are bounded, content security headers are active, and camera/microphone access is requested only for voluntary scan/search actions.
+6. **Full-catalog visual recognition preparation.** All 86 catalog/package targets are registered (83 specific variants and three broad family leads). Image-manifest audits, cumulative training/export scripts, per-class test gates, candidate confirmation, and an inactive browser-model integration are ready. No visual model is trained or deployed until real photos and evaluation evidence exist.
 
 ## Next — expand the catalog safely
 

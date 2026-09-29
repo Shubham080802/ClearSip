@@ -4,6 +4,8 @@ import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, get
 import { buildPackageChoices, hasExplanation } from "./package-options.js";
 import { resetCaptureButton, setCaptureProcessing } from "./camera-ui.js";
 import { validateScanFile } from "./scan-guardrails.js";
+import { getRecognitionCoverage, getCatalogDiscoveryById } from "./catalog-api.js";
+import { classifyImage, rankOcrCandidates, mergeCandidates, readBarcode, contradictsLabel } from "./recognition.js";
 import "./style.css";
 import "./camera.css";
 import "./package-picker.css";
@@ -34,6 +36,9 @@ const packageSubmit = document.querySelector("#package-submit");
 const packageHint = document.querySelector("#package-hint");
 let packageChoices = [];
 let selectionRevision = 0;
+let recognitionCoveragePromise;
+const recognitionCandidates = document.querySelector("#recognition-candidates");
+const recognitionCoverageNote = document.querySelector("#recognition-coverage-note");
 let cameraStream = null;
 const OCR_TIMEOUT_MS = 45_000;
 
@@ -75,6 +80,7 @@ function showDiscoveryResult(drink, matchedFrom = "typed search", selectedSize =
 
 async function handleQuery(raw, origin = "typed search") {
   selectionRevision++;
+  recognitionCandidates.classList.add("hidden");
   packagePicker.classList.add("hidden");
   let drink = null;
   const gtin = raw.replace(/\D/g, "");
@@ -153,6 +159,60 @@ async function loadCatalogDiscoveries() {
 loadCatalogSummary();
 loadCatalogDiscoveries();
 
+async function loadRecognitionCoverage() {
+  recognitionCoveragePromise ||= getRecognitionCoverage().catch((error) => { recognitionCoveragePromise = null; throw error; });
+  const coverage = await recognitionCoveragePromise;
+  recognitionCoverageNote.textContent = `${coverage.total_targets} catalog targets tracked · ${coverage.concrete_variants} specific drink variants · ${coverage.visual_classes_deployed} visually trained classes deployed. ${coverage.family_leads} broad families need specific flavors. Label-text scanning remains available.`;
+  return coverage.records;
+}
+loadRecognitionCoverage().catch(() => {
+  recognitionCoverageNote.textContent = "Visual recognition coverage is unavailable. Label-text scanning and manual search remain available.";
+});
+
+function showRecognitionCandidates(candidates, origin, modelStatus) {
+  recognitionCandidates.replaceChildren();
+  recognitionCandidates.classList.remove("hidden");
+  const heading = document.createElement("h3");
+  heading.textContent = "Confirm the drink in your image";
+  const note = document.createElement("p");
+  note.textContent = modelStatus === "validated"
+    ? "These are suggestions, not verified package identities. Confirm the flavor, then choose your size."
+    : modelStatus === "awaiting_training_images" ? "No trained visual model is deployed yet. These suggestions use label text; confirm the flavor and size."
+    : "The visual model is unavailable. These suggestions use label text; confirm the flavor and size.";
+  recognitionCandidates.append(heading, note);
+  for (const target of candidates) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = `${target.name} — ${target.evidence}`;
+    button.addEventListener("click", async () => {
+      const revision = ++selectionRevision;
+      button.disabled = true;
+      scanStatus.textContent = "Loading the confirmed catalog entry…";
+      try {
+        const discovery = target.discovery_id ? await getCatalogDiscoveryById(target.discovery_id) : null;
+        const products = target.package_ids.length ? await getCatalogProducts(target.name) : [];
+        if (revision !== selectionRevision) return;
+        packageChoices = buildPackageChoices(products.filter((item) => target.package_ids.includes(item.id)), discovery ? [discovery] : []);
+        if (!packageChoices.length) throw new Error("This catalog entry cannot load right now. Try its name.");
+        query.value = target.name;
+        variantSelect.replaceChildren(new Option("Choose a drink / flavor", ""));
+        packageChoices.forEach((group, index) => variantSelect.add(new Option(group.name, String(index))));
+        variantSelect.value = packageChoices.length === 1 ? "0" : "";
+        populateSizes();
+        packagePicker.classList.remove("hidden");
+        recognitionCandidates.classList.add("hidden");
+        emptyState.classList.add("hidden");
+        scanStatus.textContent = `You confirmed ${target.name} from ${origin}. Choose the package size; the image does not verify it.`;
+      } catch (error) {
+        if (revision === selectionRevision) scanStatus.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+    recognitionCandidates.append(button);
+  }
+}
+
 function clearSelectionResult() {
   selectionRevision++;
   result.classList.add("hidden");
@@ -179,6 +239,7 @@ function populateSizes() {
 }
 
 async function searchPackageChoices(raw) {
+  recognitionCandidates.classList.add("hidden");
   const revision = ++selectionRevision;
   packagePicker.classList.add("hidden");
   result.classList.add("hidden");
@@ -223,6 +284,7 @@ async function searchPackageChoices(raw) {
 }
 
 query.addEventListener("input", () => {
+  recognitionCandidates.classList.add("hidden");
   clearSelectionResult();
   packagePicker.classList.add("hidden");
   scanStatus.textContent = "";
@@ -274,27 +336,58 @@ function withTimeout(promise, message) {
 }
 
 async function ocrFile(file, origin) {
-  scanStatus.textContent = `Reading ${origin}… this can take a moment.`;
-  let worker;
+  const revision = ++selectionRevision;
+  recognitionCandidates.classList.add("hidden");
+  packagePicker.classList.add("hidden");
+  result.classList.add("hidden");
+  scanStatus.textContent = `Checking ${origin} for a barcode and label text…`;
+  let worker, image;
   try {
-    worker = await withTimeout(createWorker("eng"), "The label reader took too long to start. Check your connection and try again.");
-    const { data } = await withTimeout(worker.recognize(file), "The label reader took too long. Try a closer, well-lit label photo.");
-    const recognized = data.text.replace(/\s+/g, " ").trim();
-    query.value = recognized;
-    const matched = await handleQuery(recognized, origin);
-    if (matched) {
-      scanStatus.textContent = "Label text read and a drink matched. Confirm it matches your package.";
-    } else {
-      scanStatus.textContent = "I read the label, but couldn’t confidently match it to the beta dataset. Edit the search field with the brand and product name.";
-      query.focus();
+    image = await createImageBitmap(file);
+    const code = await readBarcode(image);
+    if (code) {
+      try {
+        const exact = await findCatalogProductByGtin(code);
+        if (revision !== selectionRevision) return false;
+        if (exact) {
+          query.value = code;
+          showResult(exact, "catalog barcode from image");
+          scanStatus.textContent = "Barcode matched a catalog package. Compare the current label with this source record.";
+          return true;
+        }
+      } catch { /* Unknown codes continue to visual/text suggestions. */ }
     }
-    return matched;
+    const catalog = await loadRecognitionCoverage();
+    const visualPromise = withTimeout(classifyImage(image, catalog), "Visual recognition timed out.")
+      .catch(() => ({ candidates: [], status: "unavailable" }));
+    let recognized = "";
+    try {
+      worker = await withTimeout(createWorker("eng"), "The label reader took too long to start.");
+      const { data } = await withTimeout(worker.recognize(file), "The label reader took too long.");
+      recognized = data.text.replace(/\s+/g, " ").trim();
+    } catch (error) {
+      console.warn("Label text unavailable; checking visual suggestions.", error);
+    }
+    const visual = await visualPromise;
+    if (revision !== selectionRevision) return false;
+    query.value = recognized;
+    const candidates = mergeCandidates(visual.candidates.filter((row) => !contradictsLabel(row.name, recognized)), rankOcrCandidates(recognized, catalog));
+    if (candidates.length) {
+      showRecognitionCandidates(candidates, origin, visual.status);
+      emptyState.classList.add("hidden");
+      scanStatus.textContent = "Choose the matching drink below. No ingredients are inferred from appearance.";
+      return true;
+    }
+    scanStatus.textContent = "No reliable image match. Center the brand and flavor, retry, or type the drink name.";
+    query.focus();
+    return false;
   } catch (error) {
     console.error(error);
-    scanStatus.textContent = error.message || "The label could not be read. Try a well-lit, front-facing photo or search by name.";
+    if (revision === selectionRevision) scanStatus.textContent = "Image recognition could not load. Try again or search by name.";
     return false;
   } finally {
     await worker?.terminate().catch((error) => console.warn("Could not stop the label reader.", error));
+    image?.close();
   }
 }
 

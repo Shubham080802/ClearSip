@@ -27,6 +27,9 @@ jobs:
       - run: python tests/api_smoke.py
       - run: python tests/catalog_coverage.py
       - run: node tests/catalog-coverage.test.mjs
+      - run: python tests/recognition_pipeline.py
+      - run: node tests/recognition.test.mjs
+      - run: python scripts/check_recognizer_release.py
       - run: python tests/import_fdc_smoke.py
       - run: python scripts/migrate_db.py --database-url "sqlite:///${{ runner.temp }}/clearsip-migration-test.db"
       - run: python scripts/migrate_db.py --database-url "sqlite:///${{ runner.temp }}/clearsip-migration-test.db"

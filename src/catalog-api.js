@@ -126,6 +126,14 @@ export function getCatalogSummary(fetchFn = fetch) {
   return fetchJson("/catalog-summary", fetchFn);
 }
 
+export function getRecognitionCoverage(fetchFn = fetch) {
+  return fetchJson("/recognition-coverage", fetchFn);
+}
+
+export function getCatalogDiscoveryById(id, fetchFn = fetch) {
+  return fetchJson(`/catalog-discoveries/${encodeURIComponent(id)}`, fetchFn);
+}
+
 export function getCatalogDiscoveries(query = "", fetchFn = fetch) {
   const filter = query.trim().slice(0, 120);
   return fetchJson(`/catalog-discoveries?limit=100${filter ? `&query=${encodeURIComponent(filter)}` : ""}`, fetchFn);

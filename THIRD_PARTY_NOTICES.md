@@ -11,6 +11,7 @@ Python resolutions may differ because requirements use minimum versions.
 | Vite (build tooling) | 7.3.6 | MIT | [vitejs/vite](https://github.com/vitejs/vite) |
 | Tesseract.js | 7.0.0 | Apache-2.0 | [naptha/tesseract.js](https://github.com/naptha/tesseract.js) |
 | Tesseract.js core | 7.0.0 | Apache-2.0 | [naptha/tesseract.js-core](https://github.com/naptha/tesseract.js-core) |
+| TensorFlow.js (lazy browser recognition runtime) | 4.22.0 | Apache-2.0 | [tensorflow/tfjs](https://github.com/tensorflow/tfjs) |
 | FastAPI | 0.141.1 | MIT | [fastapi/fastapi](https://github.com/fastapi/fastapi) |
 | Uvicorn | 0.53.0 | BSD-3-Clause | [Kludex/uvicorn](https://github.com/Kludex/uvicorn) |
 | Psycopg / psycopg-binary | 3.3.6 | LGPL-3.0-only | [psycopg/psycopg](https://github.com/psycopg/psycopg) |
@@ -38,3 +39,8 @@ dependencies or externally loaded assets change.
 
 Manufacturer data and brand names are addressed separately in
 [Licensing and data rights](LICENSE_SCOPE.md).
+
+Optional training dependencies in `ml/requirements-training.txt` and pretrained
+MobileNet/ImageNet assets are separate from the deployed API. Their packages,
+weights, and training images need an artifact-specific rights review before
+model redistribution; ClearSip's MIT license does not relicense them.

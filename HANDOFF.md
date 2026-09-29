@@ -1,6 +1,6 @@
 # ClearSip project handoff
 
-**Last updated:** 2026-09-26
+**Last updated:** 2026-09-28
 **Repository:** `Shubham080802/ClearSip` (public; `main` is pushed)
 **Local path:** `/Users/shubhamkumar/Documents/GITHUB Projects/ClearSip`
 
@@ -9,6 +9,9 @@
 The Vite MVP builds with `npm run build`; it supports text, live browser-camera label capture, image OCR, selected-video-frame OCR, browser speech recognition, source-backed lookup, and typed GTIN/UPC lookup. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. SQL has five package records and 85 catalog entries (overlapping, not additive). The latest all-entry audit supplies manufacturer variant ingredient panels for 79 entries; six remain pending and are marked before selection.
 
 ## Important implementation choices
+
+- Visual recognition preparation (2026-09-28): `api/recognition.py` registers every catalog discovery plus package-only variants; currently 86 targets, 83 concrete drinks, three family leads. `/api/recognition-coverage` exposes status. No trained model/images exist. `ml/`, `scripts/train_recognizer.py`, and `docs/VISUAL_RECOGNITION.md` define permission-cleared photo manifests, leakage audits, cumulative classes, and evaluation/export gates. Training dependencies are isolated, proposed, and not installed/validated; do not install them in Vercel's API environment.
+- Image scans now offer confirmable stable-ID candidates using OCR, optional browser-native barcode detection, and a lazy TensorFlow.js runtime only for an approved model. `public/models/drink-recognizer/release.json` stays inactive until genuine tests/device review pass. Ordinary user scans are not silently saved or uploaded for training. The next meaningful step is collecting authorized photos for the 12 priority-one variants plus unknown scenes; all other variants remain tracked, not falsely marked trained.
 
 - `src/data.js` is a deliberately small reviewed fallback; `src/catalog-api.js` adapts sourced API records to the browser UI.
 - `api/source_labels.py` validates committed `data/reviewed-labels-*.json` snapshots and supplements SQL with source panels. Vercel bundles them through `includeFiles`. A variant panel is NOT certification of each selectable package; nutrition stays per source serving, never silently scaled to bottle volume. Missing amounts remain null. Powerade Zero Mixed Berry now has a complete source statement.

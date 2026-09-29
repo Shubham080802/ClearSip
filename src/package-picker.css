@@ -13,3 +13,9 @@
 .ingredient-statement h3 { margin:0 0 10px; color:var(--navy); }
 .ingredient-statement p { margin:0; }
 @media(max-width:560px) { .package-fields { grid-template-columns:1fr; } .package-picker button { width:100%; } }
+.recognition-coverage { color:var(--muted); font-size:12px; line-height:1.6; margin:16px 0 0; }
+.recognition-candidates { background:var(--wash); border:1px solid var(--line); border-radius:12px; padding:18px; margin-top:18px; }
+.recognition-candidates h3 { margin:0 0 8px; }
+.recognition-candidates p { color:var(--muted); font-size:13px; line-height:1.5; }
+.recognition-candidates button { display:block; width:100%; text-align:left; border:1px solid var(--line); border-radius:8px; padding:12px; margin:8px 0; color:var(--ink); background:var(--card); }
+.recognition-candidates button:focus-visible { outline:2px solid #555cc0; outline-offset:3px; }

@@ -38,8 +38,11 @@ and plain-language context—with the source and uncertainty kept visible.
 - **Ingredient explanations:** full available ingredient statements, selected ingredient roles, nutrition, and disclosed-claim context.
 - **Visible evidence:** manufacturer sources, dates, unknown amounts, and distinct variant-versus-package scope.
 
-Camera input reads visible text; it is not continuous object recognition.
-An exact flavor or package may still require manual selection.
+Camera input currently reads visible text and suggests catalog matches for
+confirmation; native barcode scanning is used when the browser supports it.
+A full-catalog visual-model workflow is prepared, but **no visual classes have
+been trained yet**. An exact flavor or package may still require manual selection.
+See the [image collection and training guide](docs/VISUAL_RECOGNITION.md).
 
 ## Catalog coverage
 
@@ -122,6 +125,9 @@ npm run build
 .venv/bin/python tests/catalog_coverage.py
 CLEARSIP_TEST_PYTHON=.venv/bin/python node tests/catalog-coverage.test.mjs
 .venv/bin/python tests/import_fdc_smoke.py
+.venv/bin/python tests/recognition_pipeline.py
+CLEARSIP_TEST_PYTHON=.venv/bin/python node tests/recognition.test.mjs
+.venv/bin/python scripts/check_recognizer_release.py
 ```
 
 The API smoke test rebuilds the disposable local database. Catalog checks cover
@@ -174,6 +180,8 @@ for how label facts, interpretation, and uncertainty are kept separate.
 - Expand coverage through attributable, rights-reviewed data sources.
 - Add reviewer-controlled label updates and a correction/reporting workflow.
 - Improve camera/barcode matching and mobile accessibility.
+- Collect permission-cleared packaging photos for all 83 specific recognition
+  targets, train in cumulative batches, and define the three broad family leads.
 - Obtain qualified nutrition/regulatory review before a broader health-focused release.
 - Extend to food products once the beverage workflow is stable.
 
