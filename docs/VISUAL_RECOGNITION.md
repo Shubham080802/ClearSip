@@ -6,7 +6,9 @@ The recognition target registry includes every current discovery and package-onl
 variant: **86 targets, 83 concrete drinks, and three broad family leads**.
 The additional target is Monster Energy Zero Sugar, distinct from Monster Ultra.
 **Zero visual classes are trained or deployed.** No training images have been
-provided. Browser OCR still reads text; it is not a trained packaging model.
+provided for training. Online reference discovery is now available, with all
+downloads quarantined until identity and rights review. Browser OCR still reads
+text; it is not a trained packaging model. See [online collection](ONLINE_IMAGE_COLLECTION.md).
 
 `/api/recognition-coverage` derives targets from SQL, so newly added records are
 registered automatically rather than excluded from a fixed pilot list.
@@ -45,6 +47,10 @@ Each sample identifies a stable registry class ID, relative file path, SHA-256,
 train/validation/test split, capture session, physical bottle/can ID, and
 documented permission for training and model distribution. The unknown class
 ID is `__unknown__`: collect out-of-catalog drinks, empty scenes, and other objects.
+Licensed online references use a separate template with original-image grouping,
+attribution, exact-identity review, rights review, and model-distribution review.
+They are allowed only in the training split; independent camera holdouts remain
+required. The collector never approves those fields or invents camera provenance.
 Do not use public manufacturer photographs as if visibility grants permission.
 Owning a photograph does not automatically settle rights in packaging artwork;
 review uncertain uses. Exclude people/private information; do not silently retain

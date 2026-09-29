@@ -33,6 +33,20 @@ For current source provenance and limitations, see the
 [catalog audit](docs/research/catalog-availability-audit.md) and
 [source acquisition plan](docs/research/us-beverage-catalog-sources.md).
 
+## Online training photos and metadata
+
+Open Food Facts image candidates, downloaded only into ignored `training-data/`,
+retain CC BY-SA 3.0 terms; OFF-derived metadata retains ODbL/DbCL terms. Those
+materials are not MIT-licensed by ClearSip. Each candidate preserves the product
+page, contributor credit, raw image ID, retrieval time, and license link.
+Quarantine is not identity approval, legal clearance, or permission to distribute
+a trained model. Packaging artwork, trademarks, and other rights may remain.
+Review attribution, ShareAlike, and the actual model-distribution use before
+training approval or deployment. See the [collection research](docs/research/online-packaging-images.md).
+
+The committed online coverage report contains ClearSip audit statuses/counts,
+not third-party product photos or a republished OFF product database.
+
 ## Dependencies, fonts, and trademarks
 
 Dependencies and externally loaded resources retain their respective licenses.

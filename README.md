@@ -43,6 +43,9 @@ confirmation; native barcode scanning is used when the browser supports it.
 A full-catalog visual-model workflow is prepared, but **no visual classes have
 been trained yet**. An exact flavor or package may still require manual selection.
 See the [image collection and training guide](docs/VISUAL_RECOGNITION.md).
+Online-image collection is a separate, review-gated workflow. The
+[coverage audit](data/recognition/online-image-coverage.json) reports bounded
+searches and pending candidates—not trained recognition or verified labels.
 
 ## Catalog coverage
 
@@ -126,6 +129,7 @@ npm run build
 CLEARSIP_TEST_PYTHON=.venv/bin/python node tests/catalog-coverage.test.mjs
 .venv/bin/python tests/import_fdc_smoke.py
 .venv/bin/python tests/recognition_pipeline.py
+.venv/bin/python tests/online_images.py
 CLEARSIP_TEST_PYTHON=.venv/bin/python node tests/recognition.test.mjs
 .venv/bin/python scripts/check_recognizer_release.py
 ```

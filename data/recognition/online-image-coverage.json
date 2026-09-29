@@ -1,0 +1,533 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-09-29T02:47:53.303444+00:00",
+  "source": "Open Food Facts",
+  "source_url": "https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/",
+  "target_count": 86,
+  "targets_with_metadata_candidates": 1,
+  "approved_training_images": 0,
+  "trained_classes": 0,
+  "notice": "Bounded first-page discovery only. Candidates are not verified labels or legal clearance. No-match is not proof of no available photos.",
+  "records": [
+    {
+      "class_id": "aquafina",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "bai",
+      "status": "needs_variant_definition",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "coca-cola-cherry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "coca-cola-cherry-zero",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "coca-cola-original",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "coca-cola-vanilla",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "coca-cola-zero",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "dasani",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "diet-pepsi",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "dr-pepper-blackberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "dunkin-caramel-cold-brew-concentrate",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "dunkin-cold-brew-concentrate",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "dunkin-pumpkin-spice-cold-brew-concentrate",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "gatorade-cool-blue",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "gatorade-strawberry-lemonade",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "gatorade-water",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "hint-water-blackberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "hint-water-cherry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "hint-water-crisp-apple",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "hint-water-georgia-peach",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "hint-water-pineapple",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "hint-water-watermelon",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "la-colombe-caramel-draft-latte",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "la-colombe-everyday-draft-latte",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "la-colombe-mocha-draft-latte",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "la-colombe-oatmilk-everyday-draft-latte",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "la-colombe-oatmilk-vanilla-draft-latte",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "la-colombe-triple-draft-latte",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "la-colombe-vanilla-draft-latte",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "lacroix",
+      "status": "needs_variant_definition",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "monster-ultra-zero",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "mountain-dew-original",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "oatly-full-fat",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "oatly-low-fat",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "oatly-original",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "oatly-unsweetened",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-100-juice-cranberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-cran-cherry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-cran-lemonade",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-cranberry-calcium",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-cranberry-lime",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-diet-cranberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-diet-cranberry-lime",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "ocean-spray-zero-sugar-cranberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "olipop-classic-root-beer-6g",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "olipop-cream-soda-6g",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "olipop-vintage-cola-6g",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "pepsi",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "pepsi-zero",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "powerade-grape",
+      "status": "source_unavailable",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "powerade-lemon-lime",
+      "status": "source_unavailable",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "powerade-orange",
+      "status": "source_unavailable",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "powerade-zero-mixed-berry",
+      "status": "source_unavailable",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "red-bull-original",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "seven-up",
+      "status": "metadata_candidates_need_review",
+      "candidate_count": 3,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "snapple",
+      "status": "needs_variant_definition",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "sprite-chill",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "sprite-original",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "sprite-tea-peach",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "sprite-zero",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "starbucks-brown-sugar-cinnamon-cold-brew-concentrate",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "starbucks-caramel-dolce-cold-brew-concentrate",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "starbucks-madagascar-vanilla-cold-brew-concentrate",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "starbucks-signature-black-cold-brew-concentrate",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "stok-bright-mellow-cold-brew",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "stok-decaf-not-too-sweet-cold-brew",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "stok-decaf-unsweet-cold-brew",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "stok-espresso-blend-black-cold-brew",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "stok-extra-bold-black-cold-brew",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "stok-not-too-sweet-black-cold-brew",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "stok-unsweet-black-cold-brew",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-energy-black-cherry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-energy-orange-pineapple",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-energy-peach-mango",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-energy-pomegranate-blueberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-energy-zero-sugar-blueberry-raspberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-energy-zero-sugar-cherry-lime",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-energy-zero-sugar-strawberry-lemonade",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "v8-original-vegetable-juice",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "variant:monster-zero-sugar",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "waterloo-black-cherry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "waterloo-grape",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "waterloo-lemon-lime",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "waterloo-ruby-red-tangerine",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "waterloo-strawberry",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    },
+    {
+      "class_id": "waterloo-tropical-fruit",
+      "status": "not_searched",
+      "candidate_count": 0,
+      "source_search_complete": false
+    }
+  ],
+  "source_searches_completed": 1,
+  "source_searches_unavailable": 1,
+  "quarantined_images": 1,
+  "new_downloads_this_run": 0
+}
