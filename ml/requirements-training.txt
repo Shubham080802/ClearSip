@@ -1,0 +1,7 @@
+# Proposed isolated Linux Python 3.11 training environment, not Vercel runtime.
+# Resolver, converter, and device smoke checks required before a model release.
+tensorflow==2.16.2
+tf-keras==2.16.0
+tensorflowjs==4.22.0
+tensorflow-decision-forests==1.9.2
+Pillow>=10.3,<12

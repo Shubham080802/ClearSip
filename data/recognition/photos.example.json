@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "samples": [],
+  "sample_fields": {
+    "path": "powerade-zero-mixed-berry/session-01/front-001.jpg",
+    "class_id": "powerade-zero-mixed-berry",
+    "split": "train",
+    "capture_session": "session-01",
+    "bottle_id": "powerade-zero-bottle-01",
+    "sha256": "REPLACE_WITH_SHA256_OF_THE_ACTUAL_IMAGE",
+    "rights_basis": "self_photographed",
+    "rights_reference": "Your own collection record; exclude unrelated personal data",
+    "training_permitted": true,
+    "model_distribution_permitted": true
+  }
+}

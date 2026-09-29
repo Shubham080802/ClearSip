@@ -8,12 +8,34 @@ from fastapi import FastAPI, HTTPException, Query
 
 from api.database import connection, placeholder
 from api.source_labels import source_labels, explain_source
+from api.recognition import recognition_summary
 
 app = FastAPI(
     title="ClearSip API",
     version="0.2.0",
     description="Versioned, sourced beverage-label information. Educational only; not medical advice.",
 )
+
+
+@app.get("/api/recognition-coverage")
+def recognition_coverage() -> dict:
+    return recognition_summary()
+
+
+@app.get("/api/catalog-discoveries/{discovery_id}")
+def discovery_detail(discovery_id: str) -> dict:
+    # Resolve a recognition class by its stable ID, never a fuzzy first hit.
+    with connection() as conn:
+        match = conn.execute(f"""
+            SELECT id, manufacturer_name, beverage_family_name, variant_name, category, market,
+                   observed_package_sizes, package_size_scope, availability_note, source_url,
+                   discovered_on, verification_status
+            FROM catalog_discoveries WHERE id = {placeholder()}
+        """, (discovery_id,)).fetchone()
+    if match is None:
+        raise HTTPException(status_code=404, detail="Catalog entry not found")
+    labels = source_labels()
+    return {**dict(match), "source_label": explain_source(labels[discovery_id]) if discovery_id in labels else None}
 
 
 def rows_to_package(rows: list[dict]) -> dict:

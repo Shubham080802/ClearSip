@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "awaiting_training_images",
+  "version": null,
+  "runtime": "tfjs-layers",
+  "labels": [],
+  "input_size": 224,
+  "preprocessing": "rgb-bilinear-half-pixel-minus-one-to-one",
+  "score_threshold": 0.8,
+  "margin_threshold": 0.15,
+  "validation_passed": false
+}

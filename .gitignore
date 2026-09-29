@@ -5,3 +5,6 @@ dist/
 .venv/
 data/*.db
 __pycache__/
+training-data/
+ml-artifacts/
+.venv-training/
