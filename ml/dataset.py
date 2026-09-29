@@ -102,5 +102,32 @@ def readiness(catalog: list[dict], samples: list[dict]) -> dict:
             "unknown_counts": counts[UNKNOWN_CLASS], "collection_minima": MIN_IMAGES, "records": results}
 
 
+def preparation_report(catalog: list[dict], samples: list[dict]) -> dict:
+    """Separate train-only preparation from camera readiness; never approve data."""
+    audit = readiness(catalog, samples)
+    records = []
+    for row in audit["records"] + [{"id": UNKNOWN_CLASS, "name": "Unknown drinks / no-drink scenes",
+                                    "trainable": True, "image_counts": audit["unknown_counts"]}]:
+        members = [sample for sample in samples if sample["class_id"] == row["id"]]
+        groups = {split: len({sample.get("source_group") or sample.get("capture_session")
+                             for sample in members if sample["split"] == split}) for split in SPLITS}
+        deficits = {split: max(0, MIN_IMAGES[split] - row["image_counts"][split])
+                    for split in SPLITS} if row["trainable"] else None
+        records.append({**row, "missing_images": deficits, "source_or_session_groups": groups,
+                        "online_training_images": sum(sample.get("rights_basis") == "licensed_online" for sample in members),
+                        "training_minimum_met": row["trainable"] and row["image_counts"]["train"] >= MIN_IMAGES["train"]})
+    known_ready = sorted(row["id"] for row in records if row["id"] != UNKNOWN_CLASS and row["training_minimum_met"])
+    unknown_ready = records[-1]["training_minimum_met"]
+    return {"schema_version": 1, "total_targets": len(catalog),
+            "concrete_targets": sum(row["trainable"] for row in catalog),
+            "approved_manifest_samples": len(samples), "training_ready_classes": known_ready,
+            "unknown_training_minimum_met": unknown_ready,
+            "research_training_data_ready": len(known_ready) >= 2 and unknown_ready,
+            "camera_data_ready_classes": audit["ready_to_train"],
+            "collection_minima": MIN_IMAGES,
+            "notice": "Preparation only, not accuracy or release approval. Counts do not prove independent/diverse photos; inspect source/session groups and near-duplicates.",
+            "records": records}
+
+
 def load_manifest(path: Path) -> dict:
     return json.loads(path.read_text())

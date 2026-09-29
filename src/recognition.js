@@ -30,7 +30,8 @@ export function rankOcrCandidates(text, catalog) {
 }
 
 export function selectVisualCandidates(scores, release, catalog, text = "") {
-  if (release.status !== "validated" || release.validation_passed !== true) return [];
+  if (release.status !== "validated" || release.validation_passed !== true ||
+      release.training_mode === "research-only" || release.evaluation_status === "deferred") return [];
   if (!Array.isArray(scores) || scores.length !== release.labels.length ||
       scores.some((score) => !Number.isFinite(score) || score < 0 || score > 1)) return [];
   const ordered = scores.map((score, index) => ({ id: release.labels[index], score })).sort((a, b) => b.score - a.score);
@@ -69,7 +70,8 @@ async function loadRuntime() {
   const response = await fetch(RELEASE_URL);
   if (!response.ok) throw new Error("Visual model release unavailable");
   const release = await response.json();
-  if (release.status !== "validated" || release.validation_passed !== true) return { release, model: null };
+  if (release.status !== "validated" || release.validation_passed !== true ||
+      release.training_mode === "research-only" || release.evaluation_status === "deferred") return { release, model: null };
   if (release.schema_version !== 1 || release.input_size !== 224 ||
       release.preprocessing !== "rgb-bilinear-half-pixel-minus-one-to-one" ||
       !Array.isArray(release.labels) || !release.labels.includes(UNKNOWN_CLASS) ||

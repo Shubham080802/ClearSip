@@ -7,16 +7,17 @@ import shutil
 import os
 import sqlite3
 import json
+import subprocess
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from api.recognition import recognition_catalog, recognition_summary
 from api.index import catalog_discoveries, discovery_detail
-from ml.dataset import UNKNOWN_CLASS, readiness, validate_samples
+from ml.dataset import UNKNOWN_CLASS, preparation_report, readiness, validate_samples
 from ml.metrics import evaluate_predictions, require_previous_classes
-from scripts.train_recognizer import training_plan
+from scripts.train_recognizer import fit_and_evaluate, training_plan
 from scripts.check_recognizer_release import check_release
 
 
@@ -86,6 +87,90 @@ class RecognitionTests(unittest.TestCase):
         with self.assertRaises(ValueError): training_plan(recognition_catalog(), [])
         with self.assertRaises(ValueError): require_previous_classes(["new",UNKNOWN_CLASS],["old",UNKNOWN_CLASS])
         require_previous_classes(["new","old",UNKNOWN_CLASS],["old",UNKNOWN_CLASS])
+
+    def test_research_preparation_covers_all_targets_without_claiming_evaluation(self):
+        catalog = recognition_catalog()
+        report = preparation_report(catalog, [])
+        self.assertEqual({row["id"] for row in report["records"]}, {row["id"] for row in catalog} | {UNKNOWN_CLASS})
+        self.assertFalse(report["research_training_data_ready"])
+        self.assertEqual(report["camera_data_ready_classes"], 0)
+        self.assertIsNone(next(row for row in report["records"] if row["id"] == "snapple")["missing_images"])
+        self.assertEqual(next(row for row in report["records"] if row["id"] == "pepsi")["missing_images"], {"train":100,"validation":20,"test":30})
+
+    def test_research_training_keeps_permissions_minima_unknowns_and_previous_classes(self):
+        catalog = recognition_catalog()
+        # These count fixtures test planning only, not accepted photo manifests.
+        samples = [{"class_id": label, "split": "train", "source_group": f"{label}:{index}"}
+                   for label in ("pepsi", "coca-cola-original", UNKNOWN_CLASS) for index in range(100)]
+        labels, audit = training_plan(catalog, samples, mode="research-only")
+        self.assertEqual(set(labels), {"pepsi", "coca-cola-original", UNKNOWN_CLASS})
+        self.assertTrue(audit["research_training_data_ready"])
+        self.assertEqual(audit["camera_data_ready_classes"], 0)
+        self.assertEqual(next(row for row in audit["records"] if row["id"] == "pepsi")["source_or_session_groups"]["train"], 100)
+        with self.assertRaises(ValueError): training_plan(catalog, samples)
+        with self.assertRaises(ValueError): training_plan(catalog, samples[:-1], mode="research-only")
+        with self.assertRaises(ValueError): training_plan(catalog, samples, ["sprite", UNKNOWN_CLASS], mode="research-only")
+        with self.assertRaises(ValueError): training_plan(catalog, [], mode="research-only")
+        with self.assertRaises(ValueError): training_plan(catalog, samples, mode="unsupported")
+
+    def test_research_run_never_reads_holdouts_or_invents_accuracy(self):
+        model = Mock()
+        def dataset(split):
+            self.assertEqual(split, "train", "Deferred camera data must stay untouched")
+            return "training dataset"
+        threshold, margin, report = fit_and_evaluate(model, dataset, {}, ["pepsi", UNKNOWN_CLASS], 2, "research-only")
+        model.fit.assert_called_once_with("training dataset", epochs=2)
+        model.predict.assert_not_called()
+        self.assertIsNone(threshold)
+        self.assertIsNone(margin)
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["status"], "deferred")
+        self.assertEqual(report["per_class"], {})
+        with tempfile.TemporaryDirectory() as directory:
+            release = Path(directory) / "release.json"
+            for fields in ({"training_mode":"research-only"}, {"evaluation_status":"deferred"}):
+                release.write_text(json.dumps({"status":"validated","validation_passed":True, **fields}))
+                with self.assertRaisesRegex(ValueError, "cannot be activated"):
+                    check_release(Path(directory))
+
+    def test_empty_research_plan_stops_before_training_dependencies_or_artifacts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"schema_version":1,"samples":[]}))
+            result = subprocess.run([sys.executable, "scripts/train_recognizer.py", "--manifest", str(manifest),
+                                     "--image-root", str(root), "--output", str(root / "candidate"),
+                                     "--training-mode", "research-only", "--plan-only"],
+                                    cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("quarantine does not count", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertNotIn("tensorflow", result.stderr.lower())
+            self.assertFalse((root / "candidate").exists())
+
+    def test_default_training_still_requires_validation_before_test(self):
+        labels = ["regular", "zero", UNKNOWN_CLASS]
+        truth = [label for label in labels for _ in range(30)]
+        scores = [[0.99 if index == labels.index(label) else 0.005 for index in range(3)] for label in truth]
+        model = Mock()
+        predictions = Mock()
+        predictions.tolist.return_value = scores
+        model.predict.return_value = predictions
+        requested = []
+        def dataset(split):
+            requested.append(split)
+            return split
+        split_rows = {split:[{"class_id":label} for label in truth] for split in ("validation","test")}
+        threshold, margin, report = fit_and_evaluate(model, dataset, split_rows, labels, 2, "camera-evaluated")
+        self.assertTrue(report["passed"])
+        self.assertIsNotNone(threshold)
+        self.assertIsNotNone(margin)
+        self.assertEqual(requested, ["train","validation","validation","test"])
+        requested.clear()
+        predictions.tolist.return_value = [[0.34,0.33,0.33]] * len(truth)
+        with self.assertRaisesRegex(ValueError, "Validation rejection/quality gates failed"):
+            fit_and_evaluate(model, dataset, split_rows, labels, 2, "camera-evaluated")
+        self.assertNotIn("test", requested, "Failed validation must not consume untouched test data")
 
     def test_evaluation_is_per_class_and_requires_unknowns(self):
         labels = ["regular", "zero", UNKNOWN_CLASS]

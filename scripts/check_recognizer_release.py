@@ -19,6 +19,8 @@ def check_release(directory: Path):
         return "No trained model deployed; OCR and manual lookup remain available"
     if release.get("status") != "validated" or release.get("validation_passed") is not True:
         raise ValueError("Only reviewed, validated releases can be activated")
+    if release.get("training_mode") == "research-only" or release.get("evaluation_status") == "deferred":
+        raise ValueError("Research-only/deferred-evaluation artifacts cannot be activated; create a camera-evaluated run")
     labels = release["labels"]
     known = {row["id"] for row in recognition_catalog() if row["trainable"]}
     if len(labels) < 3 or len(set(labels)) != len(labels) or UNKNOWN_CLASS not in labels or set(labels) - {UNKNOWN_CLASS} - known:

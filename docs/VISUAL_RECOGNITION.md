@@ -5,8 +5,8 @@
 The recognition target registry includes every current discovery and package-only
 variant: **86 targets, 83 concrete drinks, and three broad family leads**.
 The additional target is Monster Energy Zero Sugar, distinct from Monster Ultra.
-**Zero visual classes are trained or deployed.** No training images have been
-provided for training. Online reference discovery is now available, with all
+**Zero visual classes are trained or deployed.** No images have been approved
+for training. Online reference discovery is now available, with all
 downloads quarantined until identity and rights review. Browser OCR still reads
 text; it is not a trained packaging model. See [online collection](ONLINE_IMAGE_COLLECTION.md).
 
@@ -29,6 +29,21 @@ Run the complete coverage audit (no ML dependencies required):
 ```bash
 .venv/bin/python scripts/recognition_audit.py
 ```
+
+Camera testing is deferred at the user's request. Continue collection, identity/
+rights review, and training preparation without marking camera evaluation passed.
+Get per-target train/validation/test deficits and source/session group counts:
+
+```bash
+.venv/bin/python scripts/recognition_audit.py --preparation \
+  --manifest training-data/off-discovery/manifest.json \
+  --image-root training-data/off-discovery
+```
+
+This includes all targets plus unknown scenes, excludes broad family leads from
+training, and counts only manifest samples after permission/checksum/leakage
+validation. Quarantined references do not count. Group counts help expose
+repeated sources; they do not establish image diversity or legal clearance.
 
 Registration is not training. The path is: target registered → photo collection
 → ready to train → candidate model → per-class evaluation → browser review
@@ -107,6 +122,37 @@ The classifier outputs ordered catalog IDs plus unknown—not ingredients or
 health assessments. TensorFlow and the browser use RGB 224×224, bilinear
 half-pixel resizing, and scaling to [-1, 1]. Label order and preprocessing are
 part of the artifact contract.
+
+### Experimental training while camera evaluation is deferred
+
+Use `--training-mode research-only` to train an **unapproved experimental
+candidate** once at least two concrete classes and unknown scenes each have
+100 approved training images. This mode retains permission/provenance checks
+and previously released/candidate classes, but does not require camera holdouts
+to start training. It never decodes holdout images for fitting/evaluation, tunes rejection
+thresholds, or reports camera accuracy. No current data meets these requirements.
+
+```bash
+python scripts/train_recognizer.py \
+  --manifest training-data/off-discovery/manifest.json \
+  --image-root training-data/off-discovery \
+  --output ml-artifacts/research-001 --training-mode research-only --plan-only
+```
+
+Manifest integrity checks still verify every listed file's checksum and split
+provenance; this is not model evaluation or test-set tuning.
+
+Remove `--plan-only` only in the verified isolated training environment, after the
+data requirements pass. Experimental artifacts carry `training_mode:
+research-only`, `evaluation_status: deferred`, null rejection thresholds and
+failed/unperformed held-out gates. Both CI release validation and browser
+inference reject them, even if someone changes just the status flag.
+
+When camera testing resumes, collect independent validation/test sessions and
+create a **new camera-evaluated run** (the default mode), retaining existing
+classes with `--previous-release ml-artifacts/research-001/release.json`.
+Do not relabel the experimental artifact as validated. Training/export itself
+remains unexercised until approved photos and a verified ML environment exist.
 
 ## Evaluate and release honestly
 

@@ -10,6 +10,19 @@ The Vite MVP builds with `npm run build`; it supports text, live browser-camera 
 
 ## Important implementation choices
 
+- Camera evaluation is deferred at the user's request (2026-09-28), not waived.
+  `scripts/recognition_audit.py --preparation` reports every target's collection
+  deficits and source/session groups from approved samples. Training now has an
+  explicit `--training-mode research-only`: requires 100 reviewed train images
+  each for at least two specific classes plus unknowns, retains previous classes,
+  never fits/evaluates on holdouts, and exports only deferred-evaluation candidates with null
+  thresholds. Release checks and browser matching reject research-only artifacts
+  even with altered status flags. Actual TensorFlow training/export is still
+  unexercised; no images have been approved. Next: finish exact-identity and rights
+  review/collection, then verify the isolated ML environment; create a separate
+  camera-evaluated run when testing resumes. Don't rewrite research results as
+  passing camera evidence.
+
 - Online-photo workflow (2026-09-28): `scripts/collect_online_images.py` / `ml/online_images.py` perform cached, bounded OFF brand/country searches and quarantine AWS photos. `data/recognition/online-image-coverage.json` is only an audit summary; source metadata/photos stay ignored under `training-data/off-discovery/`. HTTP access/rate/service errors stop requests, and unsurveyed targets are not called missing. See `docs/ONLINE_IMAGE_COLLECTION.md`. No quarantined sample is approved or trained. `ml/dataset.py` now permits reviewed `licensed_online` provenance for train only; real-camera validation/test and explicit model-distribution review remain mandatory.
 
 - Visual recognition preparation (2026-09-28): `api/recognition.py` registers every catalog discovery plus package-only variants; currently 86 targets, 83 concrete drinks, three family leads. `/api/recognition-coverage` exposes status. No trained model or approved training images exist. `ml/`, `scripts/train_recognizer.py`, and `docs/VISUAL_RECOGNITION.md` define permission-cleared photo manifests, leakage audits, cumulative classes, and evaluation/export gates. Training dependencies are isolated, proposed, and not installed/validated; do not install them in Vercel's API environment.

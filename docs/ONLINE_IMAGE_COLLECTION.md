@@ -7,9 +7,11 @@ See [source/API research](research/off-image-collection-api.md) and
 
 ## Bounded collection
 
-Initial run: one 7UP-family search succeeded and an initial reference is
-quarantined. Subsequent Aquafina and Powerade searches returned HTTP 503, so
-remaining searches are incomplete. An earlier `7up Free` metadata candidate was
+Current snapshot: 7UP and Aquafina searches succeeded; two references are
+quarantined. A subsequent Coca-Cola search returned HTTP 503, so remaining
+searches are incomplete (Powerade also failed in an earlier run). The Aquafina
+reference is a multipack, not an isolated-bottle camera example. An earlier
+`7up Free` metadata candidate was
 rejected for the regular 7UP class; the retained reference still needs exact US
 identity and rights review. No samples have been approved or trained. Check the
 [audit summary](../data/recognition/online-image-coverage.json) for the snapshot.
@@ -74,11 +76,15 @@ contains only audit outcomes/counts, not the photos or source product database.
 
 ```bash
 .venv/bin/python scripts/recognition_audit.py \
+  --preparation \
   --manifest training-data/off-discovery/manifest.json \
   --image-root training-data/off-discovery
 ```
 
 The existing 100 train / 20 validation / 30 test starting targets still apply per
 class, along with unknown examples, cumulative class retention, per-class gates,
-and browser review. See [visual training](VISUAL_RECOGNITION.md). No training or
-deployment occurs simply because a photo has been downloaded.
+and browser review. Camera testing is currently deferred. Reviewed online images
+can support research-only training after the training minima pass; that mode
+cannot claim camera accuracy or activate browser inference. See
+[visual training](VISUAL_RECOGNITION.md). No training or deployment occurs simply
+because a photo has been downloaded.
