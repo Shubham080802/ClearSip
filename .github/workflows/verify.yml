@@ -28,6 +28,7 @@ jobs:
       - run: python tests/catalog_coverage.py
       - run: node tests/catalog-coverage.test.mjs
       - run: python tests/recognition_pipeline.py
+      - run: python tests/online_images.py
       - run: node tests/recognition.test.mjs
       - run: python scripts/check_recognizer_release.py
       - run: python tests/import_fdc_smoke.py
