@@ -10,6 +10,7 @@ from api.database import connection, placeholder
 from api.source_labels import source_labels, explain_source
 from api.recognition import recognition_summary
 from api.ingredient_effects import ingredient_effect_profiles
+from api.package_evidence import package_evidence
 
 app = FastAPI(
     title="ClearSip API",
@@ -50,6 +51,7 @@ def rows_to_package(rows: list[dict]) -> dict:
                            if first["market"] == "United States" and label["name"].casefold() == first["display_name"].casefold()), None)
     return {
         "source_label": explain_source(current_source) if current_source else None,
+        "package_evidence": package_evidence(first),
         "id": first["package_id"],
         "name": first["display_name"],
         "manufacturer": first["manufacturer_name"],
@@ -168,7 +170,11 @@ def catalog_summary() -> dict[str, int]:
             """
             SELECT
                 (SELECT COUNT(*) FROM label_versions WHERE is_current = 1) AS reviewed_package_labels,
-                (SELECT COUNT(*) FROM catalog_discoveries) AS catalog_discoveries
+                (SELECT COUNT(*) FROM catalog_discoveries) AS catalog_discoveries,
+                (SELECT COUNT(*) FROM product_packages WHERE gtin IS NOT NULL AND TRIM(gtin) <> '') AS gtin_linked_packages,
+                (SELECT COUNT(*) FROM label_versions lv JOIN source_records s ON s.id = lv.source_id
+                  WHERE lv.is_current = 1 AND lv.verification_status = 'package_verified'
+                    AND s.source_type IN ('package_observation', 'manufacturer_label', 'usda_fdc_branded')) AS verified_package_labels
             """
         ).fetchone()
     coverage = catalog_coverage()
@@ -184,7 +190,7 @@ def package_label_rows(column: str, value: str) -> list[dict]:
                bv.display_name, bv.flavor_name, bv.category, bf.name AS family_name,
                m.name AS manufacturer_name, lv.serving, lv.servings_per_container, lv.calories, lv.saturated_fat_g, lv.total_sugar_g,
                lv.added_sugar_g, lv.sodium_mg, lv.caffeine_mg, lv.ingredient_statement, lv.verification_status, lv.label_observed_on,
-               s.publisher, s.url AS source_url, s.accessed_on,
+               lv.id AS label_version_id, s.publisher, s.url AS source_url, s.accessed_on, s.source_type,
                la.overall_status, la.sugar_free_claim_status, la.preservative_free_claim_status,
                la.healthy_claim_status, la.frequent_intake_context, la.summary AS assessment_summary,
                la.policy_version,
