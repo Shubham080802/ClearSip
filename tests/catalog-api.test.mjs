@@ -63,11 +63,16 @@ const variantOnly = toDisplaySourceLabel({ id:"candidate", market:"United States
   name:"Cola Zero", ingredients:"Water, flavors", source_url:"https://example.test/variant",
   publisher:"Example", serving:"8 fl oz", accessed_on:"2026-09-01" } }, "20 fl oz");
 assert.equal(variantOnly.packageEvidence.scope, "variant");
+assert.match(variantOnly.assessment.title, /selected package is unverified/);
+assert.match(variantOnly.scopeNote, /not a match to the selected package/);
 assert.match(renderPackageEvidence(variantOnly), /Selecting a size does not prove/);
 const packageReviewed = toDisplayProduct({ ...product, gtin:"012345678905", package_evidence:{
   ...product.package_evidence, label_scope:"package", label_verified:true, gtin_linked:true,
   source_type:"package_observation" } });
 assert.equal(packageReviewed.packageEvidence.scope, "package");
+assert.equal(toDisplayProduct({ ...product, label_context:{}, gtin:"012345678905", package_evidence:{
+  ...product.package_evidence, label_scope:"package", label_verified:true, gtin_linked:true,
+  source_type:"package_observation" } }).assessment.title, "This result summarizes the reviewed package label facts.");
 assert.match(renderPackageEvidence(packageReviewed, "catalog barcode from image"), /Barcode matched this stored package record/);
 assert.match(renderPackageEvidence(packageReviewed), /this selection was not a barcode scan/);
 assert.match(renderPackageEvidence(packageReviewed), /Exact package label reviewed/);

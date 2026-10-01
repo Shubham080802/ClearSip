@@ -30,7 +30,8 @@ function claimTitle(context, packageVerified = false) {
     case "not_assessable":
       return "There is not enough disclosed label data to assess the visible claim.";
     default:
-      return "This result summarizes the disclosed package label facts.";
+      return packageVerified ? "This result summarizes the reviewed package label facts." :
+        "This result summarizes the source's disclosed facts; the selected package is unverified.";
   }
 }
 
@@ -95,7 +96,7 @@ export function toDisplaySourceLabel(discovery, selectedSize = "") {
     source: { publisher: label.publisher, url: label.source_url },
     verification_status: "manufacturer_variant_label",
     label_observed_on: label.accessed_on,
-    scope_note: `Manufacturer information for this drink and flavor. Nutrition values use the source's stated serving, not the selected bottle volume. ${label.notes || "Compare the ingredient list with your package; formulations may differ."}`,
+    scope_note: `Manufacturer information for this drink and flavor, not a match to the selected package. Nutrition values use the source's stated serving, not the selected bottle volume. ${label.notes || "Compare the ingredient list with your package; formulations may differ."}`,
   });
   display.ingredients = (label.ingredient_functions || []).map((item) => ({
     name: item.name, role: "Declared ingredient function", context: item.context,
