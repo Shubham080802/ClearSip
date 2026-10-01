@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 subprocess.run([sys.executable, "scripts/bootstrap_db.py"], cwd=ROOT, check=True)
 
 sys.path.insert(0, str(ROOT))
-from api.index import catalog_discoveries, catalog_summary, product_detail, search_products
+from api.index import catalog_discoveries, catalog_summary, product_by_gtin, product_detail, search_products
 
 coke = product_detail("coca-cola-zero-sugar-12oz-us")
 monster = product_detail("monster-zero-sugar-16oz-us")
@@ -36,8 +36,18 @@ assert coffee["observed_package_sizes"] == "9 fl oz can"
 energy = catalog_discoveries(query="V8 Energy Peach", limit=100)[0]
 assert energy["variant_name"] == "Peach Mango"
 assert energy["observed_package_sizes"] == "8 fl oz can (237 mL)"
+gatorade = product_by_gtin("00052000324815")
+assert gatorade["id"] == "gatorade-cool-blue-20oz-us"
+assert gatorade["package_evidence"]["label_verified"]
+assert gatorade["servings_per_container"] == 1
+assert gatorade["total_sugar_g"] == 35 and gatorade["added_sugar_g"] == 35
+assert gatorade["sodium_mg"] == 270 and gatorade["caffeine_mg"] == 0
+assert gatorade["label_context"]["overall_status"] == "routine_intake_caution"
+assert not coke["package_evidence"]["label_verified"]
 summary = catalog_summary()
-assert summary["reviewed_package_labels"] == 5
+assert summary["reviewed_package_labels"] == 6
+assert summary["verified_package_labels"] == 1
+assert summary["gtin_linked_packages"] == 1
 assert summary["catalog_discoveries"] == 85
 assert summary["source_ingredient_panels"] + summary["pending_ingredient_panels"] == 85
 

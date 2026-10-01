@@ -11,6 +11,7 @@ from api.source_labels import source_labels, explain_source
 from api.recognition import recognition_summary
 from api.ingredient_effects import ingredient_effect_profiles
 from api.package_evidence import package_evidence
+from api.classification import assessment_for, POLICY_VERSION
 
 app = FastAPI(
     title="ClearSip API",
@@ -47,6 +48,9 @@ def discovery_detail(discovery_id: str) -> dict:
 
 def rows_to_package(rows: list[dict]) -> dict:
     first = rows[0]
+    fallback_assessment = None
+    if first["overall_status"] is None:
+        fallback_assessment = assessment_for(dict(first))
     current_source = next((label for label in source_labels().values()
                            if first["market"] == "United States" and label["name"].casefold() == first["display_name"].casefold()), None)
     return {
@@ -75,13 +79,13 @@ def rows_to_package(rows: list[dict]) -> dict:
         "label_observed_on": first["label_observed_on"],
         "source": {"publisher": first["publisher"], "url": first["source_url"], "accessed_on": first["accessed_on"]},
         "label_context": {
-            "overall_status": first["overall_status"],
-            "sugar_free_claim_status": first["sugar_free_claim_status"],
-            "preservative_free_claim_status": first["preservative_free_claim_status"],
-            "healthy_claim_status": first["healthy_claim_status"],
-            "frequent_intake_context": first["frequent_intake_context"],
-            "summary": first["assessment_summary"],
-            "policy_version": first["policy_version"],
+            "overall_status": first["overall_status"] or fallback_assessment[0],
+            "sugar_free_claim_status": first["sugar_free_claim_status"] or fallback_assessment[1],
+            "preservative_free_claim_status": first["preservative_free_claim_status"] or fallback_assessment[2],
+            "healthy_claim_status": first["healthy_claim_status"] or fallback_assessment[3],
+            "frequent_intake_context": first["frequent_intake_context"] or fallback_assessment[4],
+            "summary": first["assessment_summary"] or fallback_assessment[5],
+            "policy_version": first["policy_version"] or POLICY_VERSION,
         },
         "ingredients": [
             {"name": row["ingredient_name"], "role": row["role"], "assessment": row["assessment"], "evidence_status": row["evidence_status"], "functional_class": row["functional_class"], "plain_language_summary": row["plain_language_summary"], "intake_context": row["intake_context"], "profile_evidence_level": row["profile_evidence_level"], "source_url": row["ingredient_source_url"] or row["profile_source_url"]}
@@ -108,12 +112,15 @@ def search_products(query: str = Query(min_length=2, max_length=120)) -> list[di
     statement = f"""
         SELECT pp.id, bv.display_name, m.name AS manufacturer, bf.name AS family,
                pp.market, pp.package_description, pp.gtin, pp.fdc_id, lv.caffeine_mg, lv.verification_status,
-               CASE WHEN LENGTH(TRIM(COALESCE(lv.ingredient_statement, ''))) > 0 THEN 1 ELSE 0 END AS has_ingredients
+               CASE WHEN LENGTH(TRIM(COALESCE(lv.ingredient_statement, ''))) > 0 THEN 1 ELSE 0 END AS has_ingredients,
+               CASE WHEN lv.verification_status = 'package_verified' AND s.source_type IN
+                 ('package_observation', 'manufacturer_label', 'usda_fdc_branded') THEN 1 ELSE 0 END AS label_verified
         FROM product_packages pp
         JOIN beverage_variants bv ON bv.id = pp.variant_id
         JOIN beverage_families bf ON bf.id = bv.family_id
         JOIN manufacturers m ON m.id = bf.manufacturer_id
         JOIN label_versions lv ON lv.package_id = pp.id AND lv.is_current = 1
+        JOIN source_records s ON s.id = lv.source_id
         WHERE {term_filters}
         ORDER BY bv.display_name, pp.package_description
         LIMIT 25
@@ -189,7 +196,8 @@ def package_label_rows(column: str, value: str) -> list[dict]:
         SELECT pp.id AS package_id, pp.market, pp.package_description, pp.gtin, pp.fdc_id,
                bv.display_name, bv.flavor_name, bv.category, bf.name AS family_name,
                m.name AS manufacturer_name, lv.serving, lv.servings_per_container, lv.calories, lv.saturated_fat_g, lv.total_sugar_g,
-               lv.added_sugar_g, lv.sodium_mg, lv.caffeine_mg, lv.ingredient_statement, lv.verification_status, lv.label_observed_on,
+               lv.added_sugar_g, lv.sodium_mg, lv.caffeine_mg, lv.ingredient_statement, lv.front_label_claims,
+               lv.verification_status, lv.label_observed_on,
                lv.id AS label_version_id, s.publisher, s.url AS source_url, s.accessed_on, s.source_type,
                la.overall_status, la.sugar_free_claim_status, la.preservative_free_claim_status,
                la.healthy_claim_status, la.frequent_intake_context, la.summary AS assessment_summary,

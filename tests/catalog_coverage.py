@@ -38,4 +38,8 @@ for query in ("Coca", "Monster", "Powerade"):
         assert detail["ingredient_statement"].strip()
 assert "phenylalanine" in product_detail("coca-cola-zero-sugar-12oz-us")["source_label"]["notes"].lower()
 assert "natural and artificial flavors" not in product_detail("powerade-orange-20oz-us")["source_label"]["ingredients"].lower()
+gatorade = product_detail("gatorade-cool-blue-20oz-us")
+assert gatorade["package_evidence"]["label_verified"]
+assert gatorade["package_evidence"]["gtin_linked"]
+assert gatorade["ingredient_statement"].startswith("WATER, SUGAR, DEXTROSE")
 print(f"All {len(rows)} catalog entries audited; {len(labels)} source panels validated")

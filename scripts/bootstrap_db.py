@@ -209,6 +209,8 @@ def main() -> None:
             ("powerade-orange-2026-09-26", "yellow-5", 8, "Color additive", "Declared color additive; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
             ("powerade-orange-2026-09-26", "yellow-6", 9, "Color additive", "Declared color additive; the label does not provide an amount.", "label_context", POWERADE_SOURCE),
         ])
+        # Reuse the reviewed exact-GTIN package batch in the disposable local seed.
+        conn.executescript((ROOT / "migrations/0002_gatorade_cool_blue_20oz.sql").read_text())
     from api.classification import refresh_assessments
 
     refresh_assessments(DATABASE)

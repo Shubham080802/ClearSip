@@ -52,5 +52,7 @@ assert label["verification_status"] == "catalog_label_match"
 assert label["is_current"] == 1
 assert assessment["overall_status"] == "caffeine_context"
 assert barcode_match["id"] == "fdc-987654"
+assert barcode_match["package_evidence"]["gtin_linked"]
+assert not barcode_match["package_evidence"]["label_verified"]
 
 print("FDC importer smoke tests passed")
