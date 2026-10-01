@@ -29,6 +29,6 @@ export function renderPackageEvidence(drink, matchedFrom = "") {
     <p>${verified ? reviewedScope :
       "The ingredient and nutrition information comes from a manufacturer variant or other unconfirmed label record. Selecting a size does not prove it matches that bottle or can."}</p>
     <dl><div><dt>Package identity</dt><dd>${escape(identity)}</dd></div>
-      <div><dt>Label evidence</dt><dd>${verified ? "Reviewed package label" : "Variant-level or package-unconfirmed information"}${evidence.observedOn ? ` · source label dated ${escape(evidence.observedOn)}` : ""}</dd></div></dl>
+      <div><dt>Label evidence</dt><dd>${verified ? "Reviewed package label" : "Variant-level or package-unconfirmed information"}${evidence.observedOn ? ` · ${verified ? "label dated" : "source record dated"} ${escape(evidence.observedOn)}` : ""}</dd></div></dl>
   </section>`;
 }

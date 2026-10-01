@@ -68,7 +68,7 @@ export function toDisplayProduct(product) {
     source: {
       title: product.source?.publisher || "Package-label source",
       url: product.source?.url || "#",
-      note: `${packageEvidence.scope === "package" ? "reviewed package label" : "exact package label unverified"} · source label dated ${product.label_observed_on || "date not specified"}.`,
+      note: `${packageEvidence.scope === "package" ? "reviewed package label · label dated" : "exact package label unverified · source record dated"} ${product.label_observed_on || "date not specified"}.`,
     },
     ingredients: (product.ingredients || []).map((ingredient) => ({
       name: ingredient.name,
