@@ -35,6 +35,10 @@ Take an appropriate database backup and review each migration before applying it
 Add a new numbered migration for each schema change; never edit an applied one.
 `scripts/bootstrap_db.py` deliberately rebuilds the local development database
 and is not a production migration or production seed workflow.
+Migration `0002_gatorade_cool_blue_20oz.sql` adds the first GTIN-specific
+manufacturer package-label snapshot. It is data migration, not evidence that
+other Gatorade sizes or current physical bottles have been inspected. Review
+[the package gate](PACKAGE_VERIFICATION.md) before adding more records.
 
 ## Vercel and Chrome-first workflow
 

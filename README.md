@@ -32,6 +32,7 @@ and plain-language context—with the source and uncertainty kept visible.
 ## Features
 
 - **Name and size lookup:** choose a drink/flavor and an available package size.
+- **Package evidence:** distinct GTIN identity and dated package-label review status; a size choice or variant panel never silently becomes an exact-package verification.
 - **Camera and media input:** capture a label, upload an image, or read one frame from a video using browser-side OCR.
 - **Voice search:** speak a drink name in browsers that support speech recognition.
 - **Typed barcode lookup:** resolve known UPC/EAN/GTIN values to catalog packages.
@@ -48,6 +49,8 @@ confirmation; native barcode scanning is used when the browser supports it.
 A full-catalog visual-model workflow is prepared, but **no visual classes have
 been trained yet**. An exact flavor or package may still require manual selection.
 See the [image collection and training guide](docs/VISUAL_RECOGNITION.md).
+See the [package-verification guide](docs/PACKAGE_VERIFICATION.md) for the first
+GTIN-specific manufacturer label and the review gate for future sizes.
 Online-image collection is a separate, review-gated workflow. The
 [coverage audit](data/recognition/online-image-coverage.json) reports bounded
 searches and pending candidates—not trained recognition or verified labels.
@@ -57,18 +60,22 @@ camera evaluation and release review pass.
 
 ## Catalog coverage
 
-Snapshot: **September 26, 2026**. Check the app or [coverage API](https://clear-sip-gules.vercel.app/api/catalog-coverage) for current counts.
+Snapshot: **September 30, 2026**, after applying the package migration. Check the app or [catalog summary API](https://clear-sip-gules.vercel.app/api/catalog-summary) for current counts.
 
 | Coverage | Count |
 | --- | ---: |
 | US catalog entries | 85 |
 | Entries with manufacturer ingredient panels | 79 |
 | Entries awaiting complete ingredient evidence | 6 |
-| Existing SQL package-label records | 5 |
+| SQL package records with label data | 6 |
+| GTIN-linked packages | 1 |
+| Reviewed exact-package web labels | 1 |
 
 Package records overlap with catalog entries; these counts are **not additive**.
 A manufacturer variant panel does not verify every bottle size. Nutrition remains
 per the source’s stated serving, not automatically the selected container.
+The reviewed package is a manufacturer web-label snapshot, not an inspection of
+the bottle in a user's hand.
 
 Coverage includes soda, sports and energy drinks, coffee, water, sparkling water,
 juice, oat beverages, and functional soda. Pending entries are identified before
@@ -134,6 +141,7 @@ npm run test:client
 npm run build
 .venv/bin/python tests/api_smoke.py
 .venv/bin/python tests/catalog_coverage.py
+.venv/bin/python tests/package_evidence.py
 CLEARSIP_TEST_PYTHON=.venv/bin/python node tests/catalog-coverage.test.mjs
 .venv/bin/python tests/import_fdc_smoke.py
 .venv/bin/python tests/recognition_pipeline.py

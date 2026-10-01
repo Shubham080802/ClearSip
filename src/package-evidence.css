@@ -1,0 +1,9 @@
+.package-evidence { margin:24px 0; padding:20px 22px; border:1px solid #c8c7db; border-left:4px solid #8589ac; border-radius:11px; background:#f5f3ff; }
+.package-evidence.package-verified { border-left-color:#507961; background:#f0f7f1; }
+.package-evidence h3 { margin:3px 0 8px; font:700 23px/1.2 "Playfair Display",serif; }
+.package-evidence > p:not(.eyebrow) { margin:0 0 15px; color:#4c526b; font-size:12px; line-height:1.65; }
+.package-evidence dl { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin:0; }
+.package-evidence dl > div { min-width:0; padding:12px; border-radius:7px; background:rgba(255,255,255,.78); }
+.package-evidence dt { margin-bottom:4px; color:#666b89; font:500 10px "DM Mono",monospace; text-transform:uppercase; }
+.package-evidence dd { margin:0; color:#343957; font-size:12px; line-height:1.55; overflow-wrap:anywhere; }
+@media(max-width:600px) { .package-evidence dl { grid-template-columns:1fr; } }

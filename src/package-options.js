@@ -33,6 +33,8 @@ export function buildPackageChoices(packages, discoveries) {
   for (const item of packages) {
     groupFor(item.display_name, item.market).options.push({
       label: item.package_description, packageId: item.id, ingredientsAvailable: Boolean(item.has_ingredients),
+      labelVerified: item.label_verified === true || item.label_verified === 1,
+      gtinLinked: Boolean(item.gtin),
     });
   }
   for (const discovery of discoveries) {

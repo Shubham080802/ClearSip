@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary, normalizeName, toDisplayProduct } from "../src/catalog-api.js";
+import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary, normalizeName, toDisplayProduct, toDisplaySourceLabel } from "../src/catalog-api.js";
+import { renderPackageEvidence } from "../src/package-evidence.js";
 import { MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, validateScanFile } from "../src/scan-guardrails.js";
 
 const product = {
@@ -14,6 +15,8 @@ const product = {
   sodium_mg: 40,
   caffeine_mg: 34,
   verification_status: "manufacturer_verified",
+  package_evidence: { label_scope:"variant_or_unconfirmed", label_verified:false, gtin_linked:false,
+    label_version_id:"cola-v1", verification_status:"manufacturer_verified", source_type:"manufacturer_page" },
   label_observed_on: "2026-09-24",
   label_context: {
     sugar_free_claim_status: "appears_label_aligned",
@@ -47,7 +50,27 @@ const fetchFn = async (url) => {
 const display = await findCatalogProduct("Cola Zero", fetchFn);
 assert.equal(display.name, "Cola Zero");
 assert.equal(display.ingredients[0].status, "watch");
-assert.equal(display.assessment.title, "The visible sugar claim appears aligned with the disclosed label facts.");
+assert.equal(display.assessment.title, "The variant's disclosed sugar facts align with the claim; this package is unverified.");
+assert.equal(display.packageEvidence.scope, "variant");
+assert.match(renderPackageEvidence(display), /Exact package label not yet verified/);
+const divergentPanel = { ...product, ingredient_statement:"Water, caffeine", source_label:{
+  name:"Cola Zero", ingredients:"Water, DIFFERENT VARIANT", source_url:"https://example.test/other",
+  publisher:"Example", serving:"8 fl oz", accessed_on:"2026-09-01" } };
+assert.equal(toDisplayProduct(divergentPanel).ingredientStatement, "Water, caffeine",
+  "an attached variant panel must not override this package record's ingredient statement");
+assert.equal(toDisplayProduct(divergentPanel).serving, "12 fl oz");
+const variantOnly = toDisplaySourceLabel({ id:"candidate", market:"United States", source_label:{
+  name:"Cola Zero", ingredients:"Water, flavors", source_url:"https://example.test/variant",
+  publisher:"Example", serving:"8 fl oz", accessed_on:"2026-09-01" } }, "20 fl oz");
+assert.equal(variantOnly.packageEvidence.scope, "variant");
+assert.match(renderPackageEvidence(variantOnly), /Selecting a size does not prove/);
+const packageReviewed = toDisplayProduct({ ...product, gtin:"012345678905", package_evidence:{
+  ...product.package_evidence, label_scope:"package", label_verified:true, gtin_linked:true,
+  source_type:"package_observation" } });
+assert.equal(packageReviewed.packageEvidence.scope, "package");
+assert.match(renderPackageEvidence(packageReviewed, "catalog barcode from image"), /Barcode matched this stored package record/);
+assert.match(renderPackageEvidence(packageReviewed), /this selection was not a barcode scan/);
+assert.match(renderPackageEvidence(packageReviewed), /Exact package label reviewed/);
 assert.equal(calls.length, 2);
 assert.equal(toDisplayProduct(product).facts.length, 6);
 assert.deepEqual(await getCatalogSummary(fetchFn), { reviewed_package_labels: 2, catalog_discoveries: 85 });

@@ -6,9 +6,19 @@
 
 ## Current state
 
-The Vite MVP builds with `npm run build`; it supports text, live browser-camera label capture, image OCR, selected-video-frame OCR, browser speech recognition, source-backed lookup, and typed GTIN/UPC lookup. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. SQL has five package records and 85 catalog entries (overlapping, not additive). The latest all-entry audit supplies manufacturer variant ingredient panels for 79 entries; six remain pending and are marked before selection.
+The Vite MVP builds with `npm run build`; it supports text, live browser-camera label capture, image OCR, selected-video-frame OCR, browser speech recognition, source-backed lookup, and typed GTIN/UPC lookup. Production is live at `https://clear-sip-gules.vercel.app/` with managed PostgreSQL. After migration 0002, SQL has six package records and 85 catalog entries (overlapping, not additive): one exact-GTIN manufacturer web label is reviewed, and five SQL package labels remain unconfirmed. The all-entry audit supplies manufacturer variant ingredient panels for 79 entries; six remain pending and are marked before selection.
 
 ## Important implementation choices
+
+- Package evidence (2026-09-30): API product details return separate package-label
+  review and GTIN-link statuses. The picker uses this gate; SQL package facts
+  take precedence over an attached variant panel, while 79 variant panels
+  remain available for other size choices. Migration 0002 adds Gatorade Cool
+  Blue 20 fl oz / GTIN 00052000324815 from PepsiCo's exact-GTIN online label.
+  Source updated 2026-09-12, reviewed 2026-09-30. No physical bottle was
+  inspected; other sizes stay unverified. See `docs/PACKAGE_VERIFICATION.md` and
+  `docs/research/package-identity-first-batch.md`. Do not promote a GTIN-only
+  FDC import or manufacturer variant panel to package verification.
 
 - Ingredient explanations (2026-09-28): `data/ingredient-effects.json` supplies
   42 primary-source-backed general/limited profiles, separate from manufacturer

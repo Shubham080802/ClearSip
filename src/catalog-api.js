@@ -1,3 +1,5 @@
+import { displayPackageEvidence } from "./package-evidence.js";
+
 const configuredApiBase = import.meta.env?.VITE_API_BASE_URL;
 const API_BASE = (configuredApiBase || "/api").replace(/\/$/, "");
 
@@ -16,10 +18,11 @@ function displayValue(value, unit = "") {
   return value === null || value === undefined ? null : `${value}${unit}`;
 }
 
-function claimTitle(context) {
+function claimTitle(context, packageVerified = false) {
   switch (context?.sugar_free_claim_status) {
     case "appears_label_aligned":
-      return "The visible sugar claim appears aligned with the disclosed label facts.";
+      return packageVerified ? "The sugar claim appears aligned with this package's reviewed label." :
+        "The variant's disclosed sugar facts align with the claim; this package is unverified.";
     case "needs_review":
       return "The visible sugar claim needs package-level review.";
     case "appears_inconsistent":
@@ -32,10 +35,11 @@ function claimTitle(context) {
 }
 
 export function toDisplayProduct(product) {
-  if (product.source_label) {
+  if (!product.ingredient_statement?.trim() && product.source_label) {
     return toDisplaySourceLabel({ id: product.id, market: product.market, source_label: product.source_label }, product.package);
   }
   const context = product.label_context || {};
+  const packageEvidence = displayPackageEvidence(product);
   const facts = [
     ["Calories", displayValue(product.calories)],
     ["Total sugar", displayValue(product.total_sugar_g, " g")],
@@ -50,19 +54,20 @@ export function toDisplayProduct(product) {
     name: product.name,
     region: product.market || "Market not specified",
     package: product.package || "Package size not specified",
+    packageEvidence,
     ingredientStatement: product.ingredient_statement || "",
     scopeNote: product.scope_note || "",
     serving: product.serving || product.package || "Package size not specified",
     nutrients: Object.fromEntries(["calories", "total_sugar_g", "added_sugar_g", "saturated_fat_g", "sodium_mg", "caffeine_mg"].map((key) => [key, product[key] ?? null])),
     facts,
     assessment: {
-      title: claimTitle(context),
+      title: claimTitle(context, packageEvidence.scope === "package"),
       context: context.frequent_intake_context || context.summary || "No assessment is available for this label version.",
     },
     source: {
       title: product.source?.publisher || "Package-label source",
       url: product.source?.url || "#",
-      note: `${product.verification_status?.replaceAll("_", " ") || "source status not specified"} · label observed ${product.label_observed_on || "date not specified"}.`,
+      note: `${packageEvidence.scope === "package" ? "reviewed package label" : "exact package label unverified"} · source label dated ${product.label_observed_on || "date not specified"}.`,
     },
     ingredients: (product.ingredients || []).map((ingredient) => ({
       name: ingredient.name,

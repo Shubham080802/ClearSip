@@ -10,7 +10,9 @@ import "./style.css";
 import "./camera.css";
 import "./package-picker.css";
 import { renderIngredientContext, bindResultTabs } from "./result-context.js";
+import { renderPackageEvidence } from "./package-evidence.js";
 import "./ingredient-context.css";
+import "./package-evidence.css";
 
 const form = document.querySelector("#search-form");
 const query = document.querySelector("#drink-query");
@@ -54,6 +56,7 @@ function showResult(drink, matchedFrom = "typed search") {
   const facts = drink.facts.map((fact) => `<li><span>${escapeHtml(fact.label)}</span><strong>${escapeHtml(fact.value)}</strong></li>`).join("");
   result.innerHTML = `
     <div class="result-heading"><div><p class="eyebrow">MATCHED FROM ${escapeHtml(matchedFrom).toUpperCase()}</p><h2>${escapeHtml(drink.name)}</h2><p>${escapeHtml(drink.region)}${drink.package ? ` · Package: ${escapeHtml(drink.package)}` : ""}</p><p>Nutrition per listed serving: ${escapeHtml(drink.serving)}</p></div><span class="verified">Dataset ${escapeHtml(drink.dataVersion || dataVersion)}</span></div>
+    ${renderPackageEvidence(drink, matchedFrom)}
     ${drink.scopeNote ? `<p class="source-scope">${escapeHtml(drink.scopeNote)}</p>` : ""}
     <div class="summary-grid"><section class="facts"><h3>Per listed serving</h3>${facts ? `<ul>${facts}</ul>` : "<p>Nutrition amounts are not provided in this source record. See the declared ingredients below.</p>"}</section><section class="takeaway"><p class="eyebrow">LABEL SCREEN</p><h3>${escapeHtml(drink.assessment.title)}</h3><p>${escapeHtml(drink.assessment.context)}</p></section></div>
     <div class="source-line"><strong>Label information source:</strong> <a href="${escapeHtml(safeExternalUrl(drink.source.url))}" target="_blank" rel="noreferrer">${escapeHtml(drink.source.title)} ↗</a> <span>${escapeHtml(drink.source.note)}</span></div>
@@ -125,7 +128,7 @@ async function loadCatalogSummary() {
     const summary = await getCatalogSummary();
     reviewedCount.textContent = summary.reviewed_package_labels;
     discoveryCount.textContent = summary.catalog_discoveries;
-    sourceCount.textContent = `${summary.source_ingredient_panels ?? 0} drink entries have manufacturer ingredient information. ${summary.pending_ingredient_panels ?? summary.catalog_discoveries} are still awaiting ingredient information.`;
+    sourceCount.textContent = `${summary.source_ingredient_panels ?? 0} drink entries have manufacturer ingredient information; ${summary.pending_ingredient_panels ?? summary.catalog_discoveries} await it. ${summary.verified_package_labels ?? 0} exact package labels verified; ${summary.gtin_linked_packages ?? 0} GTINs linked.`;
   } catch (error) {
     console.warn("Catalog summary is unavailable; showing the bundled coverage figures.", error);
   }
@@ -226,7 +229,9 @@ function populateSizes() {
   packageHint.textContent = "Choose the size printed on your can or bottle. Label details are available only for the sizes marked below.";
   group?.options.forEach((option, index) => {
     const available = hasExplanation(option);
-    const suffix = option.discovery?.source_label ? " — manufacturer ingredients" : available ? " — label available" : " — ingredients not available yet";
+    const suffix = !available ? " — ingredients not available yet" :
+      option.labelVerified ? " — reviewed package label" :
+      " — manufacturer ingredients; exact label unverified";
     const entry = new Option(`${option.label}${suffix}`, String(index));
     entry.disabled = !available;
     sizeSelect.add(entry);
@@ -293,8 +298,10 @@ sizeSelect.addEventListener("change", () => {
   clearSelectionResult();
   const option = packageChoices[Number(variantSelect.value)]?.options[Number(sizeSelect.value)];
   packageSubmit.disabled = sizeSelect.value === "" || !hasExplanation(option);
-  packageHint.textContent = option?.discovery?.source_label
-    ? "Manufacturer ingredients and the source's stated nutrition serving are available. Confirm these against your package."
+  packageHint.textContent = option?.labelVerified
+    ? "This size has a reviewed package label. Compare its date and ingredients with your container."
+    : option?.discovery?.source_label || option?.ingredientsAvailable
+    ? "Manufacturer ingredients are available, but this exact package label is unverified. Nutrition stays per the source's stated serving."
     : "Select Show this size to open its available information.";
 });
 packagePicker.addEventListener("submit", async (event) => {
@@ -306,8 +313,9 @@ packagePicker.addEventListener("submit", async (event) => {
   packageSubmit.disabled = true;
   packageHint.textContent = "Loading your selected package…";
   try {
-    const drink = (option.discovery && toDisplaySourceLabel(option.discovery, option.label))
-      || (option.packageId ? await getCatalogProduct(option.packageId) : option.localDrink);
+    const drink = option.packageId && option.ingredientsAvailable
+      ? await getCatalogProduct(option.packageId)
+      : option.discovery?.source_label ? toDisplaySourceLabel(option.discovery, option.label) : option.localDrink;
     if (revision !== selectionRevision) return;
     if (drink) showResult({ ...drink, package: option.label }, "drink and size selection");
     packageHint.textContent = "Showing available ingredients. Nutrition values below are per listed serving.";

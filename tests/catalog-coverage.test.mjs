@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { buildPackageChoices, hasExplanation } from "../src/package-options.js";
-import { toDisplaySourceLabel } from "../src/catalog-api.js";
+import { toDisplaySourceLabel, toDisplayProduct } from "../src/catalog-api.js";
 import { buildIngredientContext, parseDeclaredIngredients } from "../src/ingredient-context.js";
 import { renderIngredientContext } from "../src/result-context.js";
+import { renderPackageEvidence } from "../src/package-evidence.js";
 
 // Run after the Python bootstrap in CI. Exercise the complete real catalog
 // through the same option-building and display functions used by the browser.
@@ -35,6 +36,20 @@ for (const row of rows) {
     assert.equal(display.nutrients.total_sugar_g, row.source_label.total_sugar_g ?? null);
   }
 }
+const coolBlue = rows.find((row) => row.id === "gatorade-cool-blue");
+assert.ok(coolBlue?.source_label);
+const reviewed = JSON.parse(execFileSync(python, ["-c",
+  "import json; from api.index import search_products, product_by_gtin; print(json.dumps({'choices':search_products('Gatorade Cool Blue'),'detail':product_by_gtin('00052000324815')}))"], { encoding:"utf8" }));
+const coolBlueChoices = buildPackageChoices(reviewed.choices, [coolBlue])[0].options;
+assert.equal(coolBlueChoices.filter((option) => option.labelVerified).length, 1);
+assert.equal(coolBlueChoices.find((option) => option.labelVerified)?.packageId, "gatorade-cool-blue-20oz-us");
+assert.equal(coolBlueChoices.filter((option) => !option.labelVerified).length, 3,
+  "other sizes retain variant-only ingredient evidence");
+const exactDisplay = toDisplayProduct(reviewed.detail);
+assert.equal(exactDisplay.packageEvidence.scope, "package");
+assert.equal(exactDisplay.nutrients.added_sugar_g, 35);
+assert.equal(exactDisplay.ingredientStatement, reviewed.detail.ingredient_statement);
+assert.match(renderPackageEvidence(exactDisplay, "catalog barcode from image"), /No physical bottle was inspected/);
 const future = { id:"future", variant_name:"Future flavor", beverage_family_name:"Future", market:"US", observed_package_sizes:"20 fl oz", package_size_scope:"variant" };
 assert.equal(hasExplanation(buildPackageChoices([], [future])[0].options[0]), false, "new unreviewed entries cannot become explanation choices");
 const emptyPackage = { id: "empty-package", display_name: "Future flavor", market: "US", package_description: "20 fl oz", has_ingredients: 0 };

@@ -49,7 +49,10 @@ def discovery_detail(discovery_id: str) -> dict:
 def rows_to_package(rows: list[dict]) -> dict:
     first = rows[0]
     fallback_assessment = None
-    if first["overall_status"] is None:
+    if any(first[field] is None for field in (
+        "overall_status", "sugar_free_claim_status", "preservative_free_claim_status",
+        "healthy_claim_status", "frequent_intake_context", "assessment_summary",
+    )):
         fallback_assessment = assessment_for(dict(first))
     current_source = next((label for label in source_labels().values()
                            if first["market"] == "United States" and label["name"].casefold() == first["display_name"].casefold()), None)

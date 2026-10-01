@@ -8,6 +8,12 @@ const groups = buildPackageChoices([reviewed], [grape, { ...grape, id: "orange",
 assert.equal(groups.length, 2, "flavors must remain separate");
 assert.deepEqual(groups[0].options.map((option) => option.label), ["20 fl oz bottle", "28 fl oz"]);
 assert.equal(groups[0].options[0].packageId, "grape-20");
+assert.equal(groups[0].options[0].gtinLinked, false);
+assert.equal(groups[0].options[0].labelVerified, false);
+const verifiedChoice = buildPackageChoices([{ ...reviewed, gtin:"00052000324815", has_ingredients:1,
+  label_verified:1 }], [grape])[0].options[0];
+assert.equal(verifiedChoice.labelVerified, true);
+assert.equal(verifiedChoice.gtinLinked, true);
 assert.equal(groups[0].options[1].packageId, undefined, "28 oz must not reuse the 20 oz label");
 assert.equal(groups[0].options[1].discovery, grape);
 assert.deepEqual(parsePackageSizes({ ...grape, observed_package_sizes: "7.5, 12 fl oz; 1.25, 2 L" }), ["7.5 fl oz", "12 fl oz", "1.25 L", "2 L"]);
