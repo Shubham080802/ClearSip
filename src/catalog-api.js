@@ -107,10 +107,7 @@ export function toDisplaySourceLabel(discovery, selectedSize = "") {
 
 function selectPackage(matches, query) {
   const normalizedQuery = normalizeName(query);
-  return matches.find((match) => normalizeName(match.display_name) === normalizedQuery)
-    || matches.find((match) => normalizeName(match.display_name).includes(normalizedQuery))
-    || matches[0]
-    || null;
+  return matches.find((match) => normalizeName(match.display_name) === normalizedQuery) || null;
 }
 
 async function fetchJson(path, fetchFn) {
@@ -151,10 +148,7 @@ export async function findCatalogDiscovery(query, fetchFn = fetch) {
   if (normalizeName(trimmed).length < 2) return null;
   const matches = await getCatalogDiscoveries(trimmed, fetchFn);
   const normalizedQuery = normalizeName(trimmed);
-  return matches.find((match) => normalizeName(match.variant_name) === normalizedQuery)
-    || matches.find((match) => normalizeName(match.variant_name).includes(normalizedQuery))
-    || matches[0]
-    || null;
+  return matches.find((match) => normalizeName(match.variant_name) === normalizedQuery) || null;
 }
 
 export async function findCatalogProductByGtin(gtin, fetchFn = fetch) {

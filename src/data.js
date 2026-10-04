@@ -6,7 +6,7 @@ export const drinks = [
   {
     id: "coca-cola-zero-sugar",
     name: "Coca-Cola Zero Sugar",
-    aliases: ["coke zero", "coca cola zero", "coke zero sugar", "diet coke zero"],
+    aliases: ["coke zero", "coca cola zero", "coke zero sugar"],
     region: "United States",
     verifiedOn: "2026-09-24",
     serving: "12 fl oz (355 mL)",
@@ -64,5 +64,6 @@ export const drinks = [
 export function findDrink(query) {
   const normal = query.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   if (!normal) return null;
-  return drinks.find((drink) => [drink.name.toLowerCase(), ...drink.aliases].some((alias) => normal.includes(alias) || alias.includes(normal))) ?? null;
+  return drinks.find((drink) => [drink.name, ...drink.aliases].some((alias) =>
+    alias.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() === normal)) ?? null;
 }

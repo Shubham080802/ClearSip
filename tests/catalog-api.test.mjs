@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary, normalizeName, toDisplayProduct, toDisplaySourceLabel } from "../src/catalog-api.js";
 import { renderPackageEvidence } from "../src/package-evidence.js";
 import { MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, validateScanFile } from "../src/scan-guardrails.js";
+import { findDrink } from "../src/data.js";
 
 const product = {
   id: "cola-12",
@@ -88,5 +89,20 @@ assert.equal(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES }, "im
 assert.match(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES + 1 }, "image"), /12 MB/);
 assert.equal(validateScanFile({ type: "video/mp4", size: MAX_VIDEO_BYTES }, "video"), null);
 assert.match(validateScanFile({ type: "text/plain", size: 1 }, "video"), /supported video/);
+
+assert.equal(findDrink("diet coke")?.name ?? null, null, "a partial alias must not turn Diet Coke into Coke Zero");
+assert.equal(findDrink("monster")?.name ?? null, null, "a brand alone must not select a particular flavor");
+const ambiguousFetch = async (url) => ({ ok:true, status:200, json:async() =>
+  url.includes("/products?") ? [
+    { id:"powerade-grape", display_name:"Powerade Grape" },
+    { id:"powerade-orange", display_name:"Powerade Orange" },
+  ] : url.includes("/catalog-discoveries?") ? [
+    { id:"powerade-grape", variant_name:"Powerade Grape" },
+    { id:"powerade-orange", variant_name:"Powerade Orange" },
+  ] : { ...product, name:"Powerade Grape" } });
+assert.equal(await findCatalogProduct("Powerade", ambiguousFetch), null,
+  "a family name must not silently select the first package");
+assert.equal(await findCatalogDiscovery("Powerade", ambiguousFetch), null,
+  "a family name must not silently select the first discovery");
 
 console.log("catalog API adapter tests passed");

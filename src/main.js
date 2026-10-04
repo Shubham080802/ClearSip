@@ -514,7 +514,7 @@ voiceButton.addEventListener("click", () => {
   const recognition = new Recognition();
   recognition.lang = "en-US"; recognition.interimResults = false; recognition.maxAlternatives = 1;
   scanStatus.textContent = "Listening—say the drink name.";
-  recognition.onresult = async (event) => { const heard = event.results[0][0].transcript; query.value = heard; await handleQuery(heard, "voice"); };
+  recognition.onresult = async (event) => { const heard = event.results[0][0].transcript; query.value = heard; await searchPackageChoices(heard); };
   recognition.onerror = () => { scanStatus.textContent = "I couldn’t hear a drink name. Please try again or type it."; };
   recognition.start();
 });
