@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:client": "node tests/catalog-api.test.mjs && node tests/camera-ui.test.mjs && node tests/video-frame.test.mjs && node tests/voice-session.test.mjs && node tests/package-options.test.mjs && node tests/ingredient-context.test.mjs"
+    "test:client": "node tests/catalog-api.test.mjs && node tests/query-race.test.mjs && node tests/camera-ui.test.mjs && node tests/video-frame.test.mjs && node tests/voice-session.test.mjs && node tests/package-options.test.mjs && node tests/ingredient-context.test.mjs"
   },
   "devDependencies": {
     "vite": "^7.1.7"

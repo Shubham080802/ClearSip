@@ -84,7 +84,7 @@ function showDiscoveryResult(drink, matchedFrom = "typed search", selectedSize =
 }
 
 async function handleQuery(raw, origin = "typed search") {
-  selectionRevision++;
+  const revision = ++selectionRevision;
   recognitionCandidates.classList.add("hidden");
   packagePicker.classList.add("hidden");
   let drink = null;
@@ -96,12 +96,14 @@ async function handleQuery(raw, origin = "typed search") {
     } catch (error) {
       console.warn("No exact package was found for this barcode.", error);
     }
+    if (revision !== selectionRevision) return false;
   }
   try {
     drink ||= await findCatalogProduct(raw);
   } catch (error) {
     console.warn("Catalog API is unavailable; using the reviewed local seed only.", error);
   }
+  if (revision !== selectionRevision) return false;
   drink ||= findDrink(raw);
   if (drink) {
     scanStatus.textContent = "";
@@ -119,6 +121,7 @@ async function handleQuery(raw, origin = "typed search") {
   } catch (error) {
     console.warn("Catalog discovery lookup is unavailable.", error);
   }
+  if (revision !== selectionRevision) return false;
 
   result.classList.add("hidden");
   emptyState.classList.remove("hidden");
