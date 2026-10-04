@@ -1,0 +1,20 @@
+import assert from "node:assert/strict";
+import { createVoiceSession } from "../src/voice-session.js";
+
+const session = createVoiceSession();
+let aborted = 0;
+const first = session.start({ abort: () => { aborted += 1; } });
+assert.equal(session.isCurrent(first), true);
+session.cancel();
+assert.equal(aborted, 1);
+assert.equal(session.isCurrent(first), false, "a late speech result cannot replace typed input");
+const second = session.start({ abort: () => { aborted += 1; } });
+assert.notEqual(second, first);
+assert.equal(session.isCurrent(second), true);
+session.finish(second);
+assert.equal(session.isCurrent(second), false);
+assert.equal(aborted, 1, "completed recognition is not aborted");
+const ended = session.start({ abort: () => { throw new Error("already ended"); } });
+assert.doesNotThrow(() => session.cancel());
+assert.equal(session.isCurrent(ended), false);
+console.log("Voice session cancellation tests passed");

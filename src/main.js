@@ -7,6 +7,7 @@ import { validateScanFile, takeScanFile } from "./scan-guardrails.js";
 import { getRecognitionCoverage, getCatalogDiscoveryById } from "./catalog-api.js";
 import { classifyImage, rankOcrCandidates, mergeCandidates, readBarcode, contradictsLabel } from "./recognition.js";
 import { waitForVideoMetadata, seekReadableVideoFrame } from "./video-frame.js";
+import { createVoiceSession } from "./voice-session.js";
 import "./style.css";
 import "./camera.css";
 import "./package-picker.css";
@@ -41,6 +42,7 @@ const packageSubmit = document.querySelector("#package-submit");
 const packageHint = document.querySelector("#package-hint");
 let packageChoices = [];
 let selectionRevision = 0;
+const voiceSession = createVoiceSession();
 let recognitionCoveragePromise;
 const recognitionCandidates = document.querySelector("#recognition-candidates");
 const recognitionCoverageNote = document.querySelector("#recognition-coverage-note");
@@ -243,7 +245,8 @@ function populateSizes() {
   }
 }
 
-async function searchPackageChoices(raw) {
+async function searchPackageChoices(raw, fromVoice = false) {
+  if (!fromVoice) voiceSession.cancel();
   recognitionCandidates.classList.add("hidden");
   const revision = ++selectionRevision;
   packagePicker.classList.add("hidden");
@@ -289,6 +292,7 @@ async function searchPackageChoices(raw) {
 }
 
 query.addEventListener("input", () => {
+  voiceSession.cancel();
   recognitionCandidates.classList.add("hidden");
   clearSelectionResult();
   packagePicker.classList.add("hidden");
@@ -344,6 +348,7 @@ function withTimeout(promise, message) {
 }
 
 async function ocrFile(file, origin) {
+  voiceSession.cancel();
   const revision = ++selectionRevision;
   recognitionCandidates.classList.add("hidden");
   packagePicker.classList.add("hidden");
@@ -511,9 +516,19 @@ voiceButton.addEventListener("click", () => {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) { scanStatus.textContent = "Voice recognition is not supported by this browser. Please type the drink name."; return; }
   const recognition = new Recognition();
+  const session = voiceSession.start(recognition);
   recognition.lang = "en-US"; recognition.interimResults = false; recognition.maxAlternatives = 1;
   scanStatus.textContent = "Listening—say the drink name.";
-  recognition.onresult = async (event) => { const heard = event.results[0][0].transcript; query.value = heard; await searchPackageChoices(heard); };
-  recognition.onerror = () => { scanStatus.textContent = "I couldn’t hear a drink name. Please try again or type it."; };
-  recognition.start();
+  recognition.onresult = async (event) => {
+    if (!voiceSession.isCurrent(session)) return;
+    const heard = event.results[0][0].transcript;
+    query.value = heard;
+    await searchPackageChoices(heard, true);
+  };
+  recognition.onerror = () => {
+    if (voiceSession.isCurrent(session)) scanStatus.textContent = "I couldn’t hear a drink name. Please try again or type it.";
+  };
+  recognition.onend = () => voiceSession.finish(session);
+  try { recognition.start(); }
+  catch { voiceSession.finish(session); scanStatus.textContent = "Voice recognition could not start. Please type the drink name."; }
 });
