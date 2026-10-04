@@ -17,8 +17,10 @@ os.environ["DATABASE_URL"] = f"sqlite:///{database}"
 subprocess.run([sys.executable, "scripts/bootstrap_db.py", "--database", str(database)], cwd=ROOT, check=True)
 
 sys.path.insert(0, str(ROOT))
+from scripts.migrate_db import apply_migrations
 from api.index import catalog_discoveries, catalog_summary, product_by_gtin, product_detail, search_products
 
+apply_migrations()
 coke = product_detail("coca-cola-zero-sugar-12oz-us")
 monster = product_detail("monster-zero-sugar-16oz-us")
 
@@ -50,6 +52,7 @@ assert gatorade["servings_per_container"] == 1
 assert gatorade["total_sugar_g"] == 35 and gatorade["added_sugar_g"] == 35
 assert gatorade["sodium_mg"] == 270 and gatorade["caffeine_mg"] == 0
 assert gatorade["label_context"]["overall_status"] == "routine_intake_caution"
+assert len(gatorade["ingredients"]) == 11
 assert not coke["package_evidence"]["label_verified"]
 summary = catalog_summary()
 assert summary["reviewed_package_labels"] == 6

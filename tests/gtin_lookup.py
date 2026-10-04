@@ -18,5 +18,10 @@ with tempfile.TemporaryDirectory(prefix="clearsip-gtin-test-") as directory:
     apply_migrations()
     for code in ("00052000324815", "0052000324815", "052000324815"):
         assert product_by_gtin(code)["id"] == "gatorade-cool-blue-20oz-us", code
+    assert [item["name"] for item in product_by_gtin("00052000324815")["ingredients"]] == [
+        "Water", "Sugar", "Dextrose", "Citric acid", "Natural and artificial flavor",
+        "Salt", "Sodium citrate", "Monopotassium phosphate", "Modified food starch",
+        "Glycerol ester of rosin", "Blue 1",
+    ]
 
 print("Equivalent package GTIN lookup passed")
