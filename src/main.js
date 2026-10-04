@@ -2,7 +2,7 @@ import { createWorker } from "tesseract.js";
 import { dataVersion, findDrink, drinks } from "./data.js";
 import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary, getCatalogProducts, getCatalogProduct, normalizeName, toDisplaySourceLabel } from "./catalog-api.js";
 import { buildPackageChoices, hasExplanation } from "./package-options.js";
-import { resetCaptureButton, setCaptureProcessing } from "./camera-ui.js";
+import { resetCaptureButton, setCaptureProcessing, finishCapture } from "./camera-ui.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import { getRecognitionCoverage, getCatalogDiscoveryById } from "./catalog-api.js";
 import { classifyImage, rankOcrCandidates, mergeCandidates, readBarcode, contradictsLabel } from "./recognition.js";
@@ -460,8 +460,8 @@ async function captureCameraFrame() {
     const frame = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
     const problem = validateScanFile(frame, "image");
     if (problem) throw new Error(problem);
-    await ocrFile(frame, "camera label");
-    stopCamera();
+    const matched = await ocrFile(frame, "camera label");
+    finishCapture(matched, stopCamera, cameraStatus);
   } catch (error) {
     console.error(error);
     scanStatus.textContent = error.message || "The camera image could not be captured. Try again or choose a photo.";
