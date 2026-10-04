@@ -7,6 +7,7 @@ import re
 from fastapi import FastAPI, HTTPException, Query
 
 from api.database import connection, placeholder
+from api.gtin import equivalent_gtins
 from api.source_labels import source_labels, explain_source
 from api.recognition import recognition_summary
 from api.ingredient_effects import ingredient_effect_profiles
@@ -233,19 +234,8 @@ def product_by_gtin(gtin: str) -> dict:
     if len(cleaned) not in (8, 12, 13, 14):
         raise HTTPException(status_code=422, detail="GTIN must contain 8, 12, 13, or 14 digits")
 
-    # GTIN-12 and GTIN-13 are represented as GTIN-14 by adding leading zeroes.
-    # An eight-digit UPC-E cannot be expanded this way, so only look it up exactly.
-    equivalents = [cleaned]
-    if len(cleaned) != 8:
-        significant = cleaned.lstrip("0") or "0"
-        equivalents.extend(
-            significant.zfill(width)
-            for width in (12, 13, 14)
-            if len(significant) <= width
-        )
-
     matches = {}
-    for equivalent in dict.fromkeys(equivalents):
+    for equivalent in equivalent_gtins(cleaned):
         records = package_label_rows("pp.gtin", equivalent)
         if records:
             matches[records[0]["package_id"]] = records

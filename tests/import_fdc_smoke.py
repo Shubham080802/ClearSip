@@ -48,6 +48,21 @@ with tempfile.TemporaryDirectory() as directory:
             ("variant-fdc-987655",),
         ).fetchone()
         assert dict(reused) == {"manufacturer_id": "pepsico", "family_id": "gatorade"}
+        # A new FDC record must never replace or duplicate a reviewed package.
+        reviewed_before = conn.execute(
+            "SELECT id, variant_id, gtin FROM product_packages WHERE id = ?",
+            ("gatorade-cool-blue-20oz-us",),
+        ).fetchone()
+        assert not import_food(conn, {
+            **sample, "fdcId": 987656, "description": "Wrong Gatorade Match",
+            "gtinUpc": "052000324815",  # UPC form of the reviewed GTIN-14.
+        })
+        reviewed_after = conn.execute(
+            "SELECT id, variant_id, gtin FROM product_packages WHERE id = ?",
+            ("gatorade-cool-blue-20oz-us",),
+        ).fetchone()
+        assert dict(reviewed_after) == dict(reviewed_before)
+        assert conn.execute("SELECT id FROM product_packages WHERE id = ?", ("fdc-987656",)).fetchone() is None
         refresh_assessments(conn)
         package = conn.execute("SELECT fdc_id, package_description FROM product_packages WHERE id = ?", ("fdc-987654",)).fetchone()
         label = conn.execute("SELECT verification_status, is_current FROM label_versions WHERE package_id = ?", ("fdc-987654",)).fetchone()

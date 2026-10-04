@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT))
 
 from api.classification import refresh_assessments
 from api.database import connection, placeholder
+from api.gtin import equivalent_gtins
 from scripts.migrate_db import apply_migrations
 
 API_URL = "https://api.nal.usda.gov/fdc/v1/foods/search"
@@ -120,6 +121,16 @@ def import_food(conn, food: dict) -> bool:
     label_hash = hashlib.sha256(json.dumps(food, sort_keys=True).encode()).hexdigest()
     label_id = f"fdc-label-{fdc_id}-{label_hash[:12]}"
     package_description = food.get("householdServingFullText") or f"{food.get('servingSize') or 'unknown'} {food.get('servingSizeUnit') or ''}".strip()
+
+    if gtin:
+        equivalents = equivalent_gtins(gtin)
+        marker = placeholder()
+        for equivalent in equivalents:
+            existing_package = conn.execute(
+                f"SELECT id FROM product_packages WHERE gtin = {marker}", (equivalent,)
+            ).fetchone()
+            if existing_package and existing_package["id"] != package_id:
+                return False
 
     marker = placeholder()
     existing_manufacturer = conn.execute(
