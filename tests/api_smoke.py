@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import atexit
+import os
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-subprocess.run([sys.executable, "scripts/bootstrap_db.py"], cwd=ROOT, check=True)
+temporary_catalog = TemporaryDirectory(prefix="clearsip-api-smoke-")
+atexit.register(temporary_catalog.cleanup)
+database = Path(temporary_catalog.name) / "catalog.db"
+os.environ["DATABASE_URL"] = f"sqlite:///{database}"
+subprocess.run([sys.executable, "scripts/bootstrap_db.py", "--database", str(database)], cwd=ROOT, check=True)
 
 sys.path.insert(0, str(ROOT))
 from api.index import catalog_discoveries, catalog_summary, product_by_gtin, product_detail, search_products

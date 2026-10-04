@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import sqlite3
 import sys
 from pathlib import Path
@@ -16,8 +17,12 @@ POWERADE_SOURCE = "https://www.powerade.com/products/powerade"
 
 
 def main() -> None:
-    DATABASE.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(DATABASE) as conn:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--database", type=Path, default=DATABASE,
+                        help="SQLite catalog to rebuild; defaults to the local development catalog")
+    database = parser.parse_args().database
+    database.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(database) as conn:
         # This is a development bootstrap, deliberately rebuilding its disposable local database.
         for table in ("label_assessments", "label_ingredients", "ingredient_profiles", "label_versions", "source_records", "catalog_discoveries", "product_packages", "ingredients", "beverage_variants", "beverage_families", "manufacturers", "product_ingredients", "products"):
             conn.execute(f"DROP TABLE IF EXISTS {table}")
@@ -213,8 +218,8 @@ def main() -> None:
         conn.executescript((ROOT / "migrations/0002_gatorade_cool_blue_20oz.sql").read_text())
     from api.classification import refresh_assessments
 
-    refresh_assessments(DATABASE)
-    print(f"Seeded {DATABASE}")
+    refresh_assessments(database)
+    print(f"Seeded {database}")
 
 
 if __name__ == "__main__":
