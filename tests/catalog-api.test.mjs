@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary, normalizeName, toDisplayProduct, toDisplaySourceLabel } from "../src/catalog-api.js";
 import { renderPackageEvidence } from "../src/package-evidence.js";
-import { MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, validateScanFile } from "../src/scan-guardrails.js";
+import { MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, validateScanFile, takeScanFile } from "../src/scan-guardrails.js";
 import { findDrink } from "../src/data.js";
 
 const product = {
@@ -89,6 +89,9 @@ assert.equal(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES }, "im
 assert.match(validateScanFile({ type: "image/jpeg", size: MAX_IMAGE_BYTES + 1 }, "image"), /12 MB/);
 assert.equal(validateScanFile({ type: "video/mp4", size: MAX_VIDEO_BYTES }, "video"), null);
 assert.match(validateScanFile({ type: "text/plain", size: 1 }, "video"), /supported video/);
+const repeatableInput = { files: [{ name: "same-drink.jpg" }], value: "same-drink.jpg" };
+assert.equal(takeScanFile(repeatableInput).name, "same-drink.jpg");
+assert.equal(repeatableInput.value, "", "clearing the picker lets the same file trigger another change event");
 
 assert.equal(findDrink("diet coke")?.name ?? null, null, "a partial alias must not turn Diet Coke into Coke Zero");
 assert.equal(findDrink("monster")?.name ?? null, null, "a brand alone must not select a particular flavor");

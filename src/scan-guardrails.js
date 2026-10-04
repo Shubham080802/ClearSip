@@ -19,3 +19,9 @@ export function validateScanFile(file, kind) {
   if (file.size > limit.maxBytes) return `Choose a ${limit.label} smaller than ${megabytes(limit.maxBytes)} MB.`;
   return null;
 }
+
+export function takeScanFile(input) {
+  const file = input.files?.[0] || null;
+  input.value = "";
+  return file;
+}

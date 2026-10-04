@@ -3,7 +3,7 @@ import { dataVersion, findDrink, drinks } from "./data.js";
 import { findCatalogDiscovery, findCatalogProduct, findCatalogProductByGtin, getCatalogDiscoveries, getCatalogSummary, getCatalogProducts, getCatalogProduct, normalizeName, toDisplaySourceLabel } from "./catalog-api.js";
 import { buildPackageChoices, hasExplanation } from "./package-options.js";
 import { resetCaptureButton, setCaptureProcessing, finishCapture } from "./camera-ui.js";
-import { validateScanFile } from "./scan-guardrails.js";
+import { validateScanFile, takeScanFile } from "./scan-guardrails.js";
 import { getRecognitionCoverage, getCatalogDiscoveryById } from "./catalog-api.js";
 import { classifyImage, rankOcrCandidates, mergeCandidates, readBarcode, contradictsLabel } from "./recognition.js";
 import { waitForVideoMetadata, seekReadableVideoFrame } from "./video-frame.js";
@@ -472,7 +472,7 @@ async function captureCameraFrame() {
 }
 
 imageInput.addEventListener("change", () => {
-  const file = imageInput.files?.[0];
+  const file = takeScanFile(imageInput);
   const problem = validateScanFile(file, "image");
   if (problem) { scanStatus.textContent = problem; return; }
   ocrFile(file, "image label");
@@ -485,7 +485,7 @@ cameraCancel.addEventListener("click", stopCamera);
 cameraDialog.addEventListener("close", stopCamera);
 
 videoInput.addEventListener("change", async () => {
-  const file = videoInput.files?.[0];
+  const file = takeScanFile(videoInput);
   const problem = validateScanFile(file, "video");
   if (problem) { scanStatus.textContent = problem; return; }
   scanStatus.textContent = "Finding a readable video frame…";
