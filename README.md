@@ -142,6 +142,7 @@ npm run build
 .venv/bin/python tests/api_smoke.py
 .venv/bin/python tests/catalog_coverage.py
 .venv/bin/python tests/package_evidence.py
+.venv/bin/python tests/gtin_lookup.py
 CLEARSIP_TEST_PYTHON=.venv/bin/python node tests/catalog-coverage.test.mjs
 .venv/bin/python tests/import_fdc_smoke.py
 .venv/bin/python tests/recognition_pipeline.py

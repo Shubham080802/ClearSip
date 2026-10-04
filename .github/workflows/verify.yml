@@ -27,6 +27,7 @@ jobs:
       - run: python tests/api_smoke.py
       - run: python tests/catalog_coverage.py
       - run: python tests/package_evidence.py
+      - run: python tests/gtin_lookup.py
       - run: node tests/catalog-coverage.test.mjs
       - run: python tests/recognition_pipeline.py
       - run: python tests/online_images.py
