@@ -20,6 +20,8 @@ assert.ok(contradictsLabel("Powerade Grape", "POWER ADE ZERO SUGAR"));
 assert.ok(!rankOcrCandidates("Powerade Zero Sugar Mixed Berry", catalog).some((row) => row.id === "powerade-grape"));
 assert.equal(rankOcrCandidates("Powerade Zero Sugar Mixed Berry",catalog)[0].id,"powerade-zero-mixed-berry");
 assert.deepEqual(rankOcrCandidates("unrelated scene",catalog),[]);
+assert.deepEqual(rankOcrCandidates("",catalog),[],"empty OCR text must never suggest a drink");
+assert.deepEqual(rankOcrCandidates("  !?  ",catalog),[],"OCR with zero words must never suggest a drink");
 assert.equal(mergeCandidates([{id:"a",evidence:"visual"}],[{id:"a",evidence:"text"}]).length,1);
 assert.equal(await readBarcode({}),null,"unsupported native barcode reader remains optional");
 globalThis.fetch = async () => ({ok:true,json:async()=>({status:"awaiting_training_images",validation_passed:false,labels:[]})});

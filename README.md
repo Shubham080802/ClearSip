@@ -141,6 +141,7 @@ npm run test:client
 npm run build
 .venv/bin/python tests/api_smoke.py
 .venv/bin/python tests/smoke_isolation.py
+.venv/bin/python tests/workflow_safety.py
 .venv/bin/python tests/catalog_coverage.py
 .venv/bin/python tests/package_evidence.py
 .venv/bin/python tests/gtin_lookup.py

@@ -36,4 +36,7 @@ jobs:
       - name: Apply immutable schema migrations
         run: python scripts/migrate_db.py
       - name: Import one reviewable FDC batch
-        run: python scripts/import_fdc.py --query "${{ inputs.query }}" --page-size "${{ inputs.page_size }}"
+        env:
+          FDC_QUERY: ${{ inputs.query }}
+          FDC_PAGE_SIZE: ${{ inputs.page_size }}
+        run: python scripts/import_fdc.py --query "$FDC_QUERY" --page-size "$FDC_PAGE_SIZE"

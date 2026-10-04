@@ -26,6 +26,7 @@ jobs:
       - run: python -m pip install -r requirements.txt
       - run: python tests/api_smoke.py
       - run: python tests/smoke_isolation.py
+      - run: python tests/workflow_safety.py
       - run: python tests/catalog_coverage.py
       - run: python tests/package_evidence.py
       - run: python tests/gtin_lookup.py
