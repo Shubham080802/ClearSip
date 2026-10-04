@@ -6,6 +6,7 @@ import { resetCaptureButton, setCaptureProcessing } from "./camera-ui.js";
 import { validateScanFile } from "./scan-guardrails.js";
 import { getRecognitionCoverage, getCatalogDiscoveryById } from "./catalog-api.js";
 import { classifyImage, rankOcrCandidates, mergeCandidates, readBarcode, contradictsLabel } from "./recognition.js";
+import { waitForVideoMetadata, seekReadableVideoFrame } from "./video-frame.js";
 import "./style.css";
 import "./camera.css";
 import "./package-picker.css";
@@ -491,11 +492,9 @@ videoInput.addEventListener("change", async () => {
   const video = document.createElement("video");
   video.muted = true;
   const fileUrl = URL.createObjectURL(file);
-  video.src = fileUrl;
   try {
-    await new Promise((resolve, reject) => { video.onloadedmetadata = resolve; video.onerror = reject; });
-    video.currentTime = Math.min(Math.max(video.duration / 2, 0), 2);
-    await new Promise((resolve) => { video.onseeked = resolve; });
+    await waitForVideoMetadata(video, fileUrl);
+    await seekReadableVideoFrame(video);
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth; canvas.height = video.videoHeight;
     canvas.getContext("2d").drawImage(video, 0, 0);
