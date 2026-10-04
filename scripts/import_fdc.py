@@ -121,8 +121,22 @@ def import_food(conn, food: dict) -> bool:
     label_id = f"fdc-label-{fdc_id}-{label_hash[:12]}"
     package_description = food.get("householdServingFullText") or f"{food.get('servingSize') or 'unknown'} {food.get('servingSizeUnit') or ''}".strip()
 
-    upsert(conn, "manufacturers", ("id", "name", "website_url"), (manufacturer_id, manufacturer, None), ("id",))
-    upsert(conn, "beverage_families", ("id", "manufacturer_id", "name"), (family_id, manufacturer_id, brand), ("id",))
+    marker = placeholder()
+    existing_manufacturer = conn.execute(
+        f"SELECT id FROM manufacturers WHERE name = {marker}", (manufacturer,)
+    ).fetchone()
+    if existing_manufacturer:
+        manufacturer_id = existing_manufacturer["id"]
+    else:
+        upsert(conn, "manufacturers", ("id", "name", "website_url"), (manufacturer_id, manufacturer, None), ("id",))
+    existing_family = conn.execute(
+        f"SELECT id FROM beverage_families WHERE manufacturer_id = {marker} AND name = {marker}",
+        (manufacturer_id, brand),
+    ).fetchone()
+    if existing_family:
+        family_id = existing_family["id"]
+    else:
+        upsert(conn, "beverage_families", ("id", "manufacturer_id", "name"), (family_id, manufacturer_id, brand), ("id",))
     upsert(
         conn,
         "beverage_variants",
@@ -148,7 +162,6 @@ def import_food(conn, food: dict) -> bool:
         ("id",),
     )
 
-    marker = placeholder()
     current = conn.execute(f"SELECT id FROM label_versions WHERE package_id = {marker} AND is_current = 1", (package_id,)).fetchone()
     if current and current["id"] != label_id:
         conn.execute(f"UPDATE label_versions SET is_current = 0 WHERE id = {marker}", (current["id"],))

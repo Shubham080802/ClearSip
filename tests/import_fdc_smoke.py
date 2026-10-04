@@ -36,6 +36,18 @@ with tempfile.TemporaryDirectory() as directory:
     apply_migrations()
     with connection() as conn:
         assert import_food(conn, sample)
+        # The migrated catalog already owns these names under stable IDs.
+        assert import_food(conn, {
+            **sample, "fdcId": 987655, "brandOwner": "PepsiCo",
+            "brandName": "Gatorade", "description": "Gatorade Test Flavor",
+            "gtinUpc": "099999999999",
+        })
+        reused = conn.execute(
+            "SELECT bf.manufacturer_id, bv.family_id FROM beverage_variants bv "
+            "JOIN beverage_families bf ON bf.id = bv.family_id WHERE bv.id = ?",
+            ("variant-fdc-987655",),
+        ).fetchone()
+        assert dict(reused) == {"manufacturer_id": "pepsico", "family_id": "gatorade"}
         refresh_assessments(conn)
         package = conn.execute("SELECT fdc_id, package_description FROM product_packages WHERE id = ?", ("fdc-987654",)).fetchone()
         label = conn.execute("SELECT verification_status, is_current FROM label_versions WHERE package_id = ?", ("fdc-987654",)).fetchone()
