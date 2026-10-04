@@ -27,6 +27,9 @@ jobs:
       - run: python tests/api_smoke.py
       - run: python tests/smoke_isolation.py
       - run: python tests/workflow_safety.py
+      # Later coverage/recognition checks intentionally read the runner's local catalog.
+      - run: python scripts/bootstrap_db.py
+      - run: python scripts/migrate_db.py
       - run: python tests/catalog_coverage.py
       - run: python tests/package_evidence.py
       - run: python tests/gtin_lookup.py
